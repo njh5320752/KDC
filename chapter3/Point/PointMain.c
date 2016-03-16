@@ -61,6 +61,7 @@ int main(void) {
 		while(LNext(&list, &ppos))
 			ShowPointPos(ppos);
 	}
+
 	printf("\n");
 
 	return 0;
