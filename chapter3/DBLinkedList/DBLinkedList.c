@@ -2,47 +2,26 @@
 #include <stdlib.h>
 #include "DBLinkedList.h"
 
-DList* d_list_append(DList *list, int data)
-{
+DList* d_list_append(DList *list, int data) {
   DList *new_list;
   DList *last;
   
   new_list = (DList*) malloc(sizeof(DList));
   new_list->next = NULL;
-  new_list->prev = NULL;
   new_list->data = data;
   
   if (list) {
-    last = d_list_last(list);
-    last->next = new_list;
-    new_list->prev = last;
-    return list;
+	  last = d_list_last(list);
+	  last->next = new_list;
+	  new_list->prev = last;
+	  return list;
   } else {
-      return new_list;
+	  new_list->prev = NULL;
+	  return new_list;
   }
 }
 
-DList* d_list_prepend(DList* list, int data) {
-	DList *new_list;
-	new_list = (DList*) malloc(sizeof(DList));
-	new_list->next = NULL;
-	new_list->prev = NULL;
-	new_list->data = data;
-	
-	if (list) {
-		if (list->prev) {
-			list->prev->next = new_list;
-			new_list->prev = list->prev;
-		}
-		list->prev = new_list;
-		new_list->next = list;
-	}
-
-	return new_list;
-}
-
-DList* d_list_last(DList *list)
-{
+DList* d_list_last(DList *list) {
   if (list) {
     while (list->next) {
 		list = list->next;
@@ -51,20 +30,16 @@ DList* d_list_last(DList *list)
   return list;
 }
 
-int d_list_length(DList *list)
-{
-    int lenght;
-
-    lenght = 0;
+int d_list_length(DList *list) {
+    int lenght = 0;
     while (list) {
 		lenght++;
 		list = list->next;
     }
-
     return lenght;
 }
 
-DList* d_list_remove(DList* list, int data) {
+DList* d_list_remove_nth_by_data(DList* list, int data) {
     DList *tmp;
     printf("Remove data:%d\n", data);
     tmp = list;
@@ -97,28 +72,14 @@ void d_list_print_all_data(DList *list) {
     }
 }
 
-DList* d_list_first(DList *list) {
-    if(list) {
-	while (list->prev)
-	    list = list->prev;
-    }
-    return list;
-}
-
-DList* d_list_insert(DList *list, int data, int position) {
+DList* d_list_insert(DList *list, int data, int n) {
 	DList *new_list;
 	DList *tmp_list;
 
-	if (position < 0 || position > (d_list_length(list) - 1)) {
-		printf("Can't insert the data\n");
+	tmp_list = d_list_nth_for(list, n);
+	if (tmp_list == NULL) {
+		printf("Can't insert data");
 		return list;
-	} else if (position == 0) {
-		return d_list_prepend(list, data);
-	}
-
-	tmp_list = d_list_nth_for(list, position);
-	if (!tmp_list) {
-		return d_list_append(list, data);
 	}
 
 	new_list = (DList*) malloc(sizeof(DList));
@@ -140,26 +101,29 @@ DList* d_list_insert(DList *list, int data, int position) {
 	}
 }
 
-DList* d_list_nth_factorial(DList* list, int n) {
+DList* d_list_nth_recursion(DList* list, int n) {
 	if (n <= 0) {
 	  return list;
 	}
-	n--;
-	return d_list_nth_factorial(d_list_next(list), n);
+	return d_list_nth_recursion(d_list_next(list), n-1);
 }
 
 DList* d_list_nth_for(DList* list, int n) {
-	int index;
-	for (index = n; index > 0; index--) {
+	int i;
+	for (i = 0; i < n && list != NULL; i++) {
 		list = list->next;
 	}
 	return list;
 }
 
-DList* d_list_remove_index(DList* list, int index) {
+DList* d_list_remove_nth(DList* list, int n) {
 	DList *remove;
-	remove = d_list_nth_for(list, index);
-	printf("Remove index:%d data:%d\n", index, remove->data);
+	remove = d_list_nth_for(list, n);
+	if (remove == NULL) {
+		printf("Can't remove data");
+		return list;
+	}
+	printf("Remove index:%d data:%d\n", n, remove->data);
 	if (remove->prev) {
 		remove->prev->next = remove->next;
 	}
@@ -174,21 +138,16 @@ DList* d_list_remove_index(DList* list, int index) {
 }
 
 DList* d_list_free(DList *list) {
-	DList *tmp = list;
 	DList* remove;
-	while(tmp) {
-		remove = tmp;
-		tmp = tmp->next;
-		if (tmp != NULL) { 
-			remove->next->prev = NULL;
-			remove->next = NULL;
-		}
+	while(list) {
+		remove = list;
+		list = list->next;
 		free(remove);
 	}
 	return NULL;
 }
 
-int d_list_index(DList *list, int data) {
+int d_list_nth_data(DList *list, int data) {
 	int i = 0;
 	while (list) {
 		if (list->data == data) {
