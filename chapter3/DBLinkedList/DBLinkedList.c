@@ -116,7 +116,7 @@ DList* d_list_insert(DList *list, int data, int position) {
 		return d_list_prepend(list, data);
 	}
 
-	tmp_list = d_list_nth_while(list, position);
+	tmp_list = d_list_nth_for(list, position);
 	if (!tmp_list) {
 		return d_list_append(list, data);
 	}
@@ -140,11 +140,12 @@ DList* d_list_insert(DList *list, int data, int position) {
 	}
 }
 
-DList* d_list_nth_while(DList* list, int n) {
-	while ((n-- > 0) && list) {
-		list = list->next;
+DList* d_list_nth_factorial(DList* list, int n) {
+	if (n <= 0) {
+	  return list;
 	}
-	return list;
+	n--;
+	return d_list_nth_factorial(d_list_next(list), n);
 }
 
 DList* d_list_nth_for(DList* list, int n) {

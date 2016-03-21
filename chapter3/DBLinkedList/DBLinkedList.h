@@ -16,7 +16,7 @@ DList* d_list_last(DList *list);
 int d_list_length(DList *list);
 DList* d_list_remove(DList* list, int data);
 DList* d_list_insert(DList *list, int data, int position);
-DList* d_list_nth_while(DList* list, int n);
+DList* d_list_nth_factorial(DList* list, int n);
 DList* d_list_nth_for(DList* list, int n);
 #define d_list_next(list) ((list) ? (((DList *)(list))->next) : NULL)
 DList* d_list_remove_index(DList* list, int index);
