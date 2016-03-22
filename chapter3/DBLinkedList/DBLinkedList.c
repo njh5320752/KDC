@@ -134,12 +134,13 @@ DList* d_list_nth_for(DList* list, int n) {
 int d_list_removed_data(DList* list) {
 	DList *remove;
 	remove = list;
-        int data = -1;
+	int data = -1;
 	if (list) {
 	   list = list->next;
-	   list->prev = NULL;
+	   if (list) {
+		   list->prev = NULL;
+	   }
 	   data = remove->data;
-	   printf("remove data:%d\n",data);
 	   free(remove);
 	}
 	return data;

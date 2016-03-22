@@ -24,4 +24,5 @@ void d_list_print_all_data(DList *list);
 void d_list_free(DList *list);
 int d_list_nth_data(DList *list, int data);
 int d_list_removed_data(DList* list);
+DList* d_list_insert_first(DList* list, int data);
 #endif

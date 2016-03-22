@@ -4,7 +4,6 @@
 int main(void) {
 	Stack* stack;
 	stack = stack_new();
-	int data;
 	push(stack, 3);
 	push(stack, 4);
 	push(stack, 5);
@@ -14,10 +13,10 @@ int main(void) {
 	while (1) {
 		int data;
 		data = pop(stack);
-		printf("data:%d\n", data);
-		if (data == -1) {
+		if (data == 0) {
 			break;
 		}
+		printf("data:%d\n", data);
 	}
 	return 0;
 }

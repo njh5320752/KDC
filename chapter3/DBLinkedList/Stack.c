@@ -15,7 +15,9 @@ void push(Stack* stack, int data) {
 
 int pop(Stack* stack) {
 	DList* tmp = stack->list;
-	stack->list = tmp->next;
+	if (tmp) {
+		stack->list = tmp->next;
+	}
 	int data = d_list_removed_data(tmp);
 	if ((data == -1)) {
 		printf("There is no data\n");
