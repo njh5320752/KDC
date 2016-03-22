@@ -1,17 +1,18 @@
 #include <stdio.h>
 #include "Stack.h"
-#include "DBLinkedList.h"
 
 int main(void) {
-	DList *list = NULL;
-	list = pop(list);
-	list = push(list, 3);
-	list = push(list, 4);
-	list = push(list, 5);
-	list = pop(list);
-	list = push(list, 6);
-	list = push(list, 7);
-	list = pop(list);
-	d_list_print_all_data(list);
+	Stack* stack;
+	stack = stack_new();
+	int data;
+	push(stack, 3);
+	push(stack, 4);
+	push(stack, 5);
+	push(stack, 6);
+	push(stack, 7);
+	
+	while(data = pop(stack)) {
+		printf("data:%d\n", data);
+	}
 	return 0;
 }

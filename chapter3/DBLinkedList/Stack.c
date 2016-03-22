@@ -3,22 +3,32 @@
 #include "Stack.h"
 #include "DBLinkedList.h"
 
-DList* push(DList* list, int data) {
-	list = d_list_append(list, data);	
-	return list;
+struct _Stack
+{
+  DList* list;
+};
+
+void push(Stack* stack, int data) {
+	d_list_insert_first((stack->list), data);
+	return;
 }
 
-DList* pop(DList* list) {
-	DList* remove = empty(list);
-	if (remove == NULL) {
-		return list;
-	}
-	remove->prev->next = NULL;
-	free(remove);
-	return list;
+int pop(Stack* stack) {
+	d_list_removed_data(stack->list);
+	return data;
 }
 
-DList* empty(DList* list) {
-	list = d_list_last(list);
-	return list;
+int empty(Stack* stack) {
+	int length = d_list_length(list);
+	return length;
+}
+
+int stack_free(Stack* stack) {
+     d_list_free(stack->list);
+}
+
+Stack* stack_new() {
+	Stack* stack = (Stack*) malloc(sizeof(Stack));
+	stack->list = NULL; 
+	return stack;
 }

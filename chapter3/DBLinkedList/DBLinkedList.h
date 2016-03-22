@@ -21,6 +21,7 @@ DList* d_list_nth_for(DList* list, int n);
 #define d_list_next(list) ((list) ? (((DList *)(list))->next) : NULL)
 DList* d_list_remove_nth(DList* list, int index);
 void d_list_print_all_data(DList *list);
-DList* d_list_free(DList *list);
+void d_list_free(DList *list);
 int d_list_nth_data(DList *list, int data);
+DList* d_list_removed_data(DList* list)
 #endif
