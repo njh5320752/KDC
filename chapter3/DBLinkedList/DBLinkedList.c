@@ -132,7 +132,7 @@ DList* d_list_nth_for(DList* list, int n) {
 }
 
 int d_list_removed_data(DList* list) {
-	DList* remove;
+	DList *remove;
 	remove = list;
         int data = -1;
 	if (list) {
@@ -142,7 +142,6 @@ int d_list_removed_data(DList* list) {
 	   printf("remove data:%d\n",data);
 	   free(remove);
 	}
-	printf("remove finish");
 	return data;
 }
 
