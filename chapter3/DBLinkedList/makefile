@@ -1,14 +1,28 @@
-main: StackMain.o Stack.o DBLinkedList.o
-	gcc -o main StackMain.o Stack.o DBLinkedList.o
+.SUFFIXES: .c.o
 
-StackMain.o: Stack.h DBLinkedList.h DBLinkedList.c Stack.c StackMain.c
-	gcc -c StackMain.c Stack.c DBLinkedList.c
+STACK = stack
 
-Stack.o: Stack.h DBLinkedList.h Stack.c DBLinkedList.c
-	gcc -c Stack.c DBLinkedList.c
+DBLINKED = dblinked
 
-DBLinkedList.o: DBLinkedList.h DBLinkedList.c
-	gcc -c DBLinkedList.c
+STACK_OBJECTS = \
+		StackMain.o Stack.o \
+		DBLinkedList.o
+DBLINKED_OBJECTS = \
+		   DBLinkedListMain.o \
+		   DBLinkedList.o
+
+CFLAGS += -Wall -g
+
+.c.o:
+	$(CC) -c $(CFLAGS) -o $@ $<
+
+all: $(STACK) $(DBLINKED)
+
+$(STACK): $(STACK_OBJECTS)
+	$(CC) -o $(STACK) $(STACK_OBJECTS)
+
+$(DBLINKED): $(DBLINKED_OBJECTS)
+	$(CC) -o $(DBLINKED) $(DBLINKED_OBJECTS)
 
 clean:
-	rm -f main StackMain.o Stack.o DBLinkedList.o
+	rm -f *.o $(STACK) $(DBLINKED)

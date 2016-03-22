@@ -21,6 +21,21 @@ DList* d_list_append(DList *list, int data) {
   }
 }
 
+DList* d_list_insert_first(DList* list, int data) {
+	DList *new_list;
+	new_list = (DList*) malloc(sizeof(DList));
+	new_list->next = NULL;
+	new_list->data = data;
+	
+	if (list) {
+		list->prev = new_list;
+		new_list->next = list;
+	} else {
+		new_list->prev = NULL;
+	}
+	return new_list;
+}
+
 DList* d_list_last(DList *list) {
   if (list) {
     while (list->next) {
@@ -116,6 +131,21 @@ DList* d_list_nth_for(DList* list, int n) {
 	return list;
 }
 
+int d_list_removed_data(DList* list) {
+	DList* remove;
+	remove = list;
+        int data = -1;
+	if (list) {
+	   list = list->next;
+	   list->prev = NULL;
+	   data = remove->data;
+	   printf("remove data:%d\n",data);
+	   free(remove);
+	}
+	printf("remove finish");
+	return data;
+}
+
 DList* d_list_remove_nth(DList* list, int n) {
 	DList *remove;
 	remove = d_list_nth_for(list, n);
@@ -137,14 +167,14 @@ DList* d_list_remove_nth(DList* list, int n) {
 	return list;
 }
 
-DList* d_list_free(DList *list) {
+void d_list_free(DList *list) {
 	DList* remove;
 	while(list) {
 		remove = list;
 		list = list->next;
 		free(remove);
 	}
-	return NULL;
+	return;
 }
 
 int d_list_nth_data(DList *list, int data) {

@@ -23,7 +23,7 @@ int main(void) {
     d_list_insert(list, 8, 2);
     printf("index:%d\n", d_list_nth_data(list, 2));
     d_list_print_all_data(list);
-    list = d_list_free(list);
+    d_list_free(list);
     printf("Length of list:%d\n", d_list_length(list));	
     return 0;
 }
