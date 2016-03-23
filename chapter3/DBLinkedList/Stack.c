@@ -20,7 +20,7 @@ bool push(Stack* stack, int* out) {
 bool pop(Stack* stack, int* out) {
     DList* list = d_list_nth_for(stack->list, 0);
     if (!list) {
-        printf("No data in list");
+        printf("No data in list\n");
         return false;
     }
     *out = d_list_get_data(list);
@@ -28,9 +28,22 @@ bool pop(Stack* stack, int* out) {
 	return true;
 }
 
+bool top(Stack* stack, int* out) {
+	DList* list = d_list_nth_for(stack->list, 0);
+	if (!list) {
+		printf("No data in list\n");
+		return false;
+	}
+	*out = d_list_get_data(list);
+	return true;
+}
+
+int size(Stack* stack) {
+	return d_list_length(stack->list);
+}
+
 bool empty(Stack* stack) {
-	int length = d_list_length(stack->list);
-    return (length > 0) ? true : false;
+    return ((stack->list) != NULL) ? true : false;
 }
 
 void stack_free(Stack* stack) {

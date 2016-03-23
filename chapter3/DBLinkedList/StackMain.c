@@ -5,9 +5,12 @@ int main(void) {
 	Stack* stack;
     int out;
     int value;
-    bool hasData;
+	int length;
 	stack = stack_new();
-    out = 3;
+	length = size(stack);
+	printf("size:%d\n", length);
+    
+	out = 3;
 	push(stack, &out);
     out = 4;
 	push(stack, &out);
@@ -17,13 +20,18 @@ int main(void) {
 	push(stack, &out);
     out = 7;
 	push(stack, &out);
+	length = size(stack);
+	printf("size:%d\n", length);
 	
-	while (1) {
-		hasData = pop(stack, &value);
-		if (hasData == false) {
-			break;
-		}
+	while (empty(stack)) {
+		pop(stack, &value);
 		printf("value:%d\n", value);
 	}
+	out = 5;
+
+	push(stack, &out);
+	stack_free(stack);
+	pop(stack, &out);
+	push(stack, &out);
 	return 0;
 }
