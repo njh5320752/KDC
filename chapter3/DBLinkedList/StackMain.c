@@ -1,22 +1,29 @@
 #include <stdio.h>
+#include <stdbool.h>
 #include "Stack.h"
-
 int main(void) {
 	Stack* stack;
+    int out;
+    int value;
+    bool hasData;
 	stack = stack_new();
-	push(stack, 3);
-	push(stack, 4);
-	push(stack, 5);
-	push(stack, 6);
-	push(stack, 7);
+    out = 3;
+	push(stack, &out);
+    out = 4;
+	push(stack, &out);
+    out = 5;
+	push(stack, &out);
+    out = 6;
+	push(stack, &out);
+    out = 7;
+	push(stack, &out);
 	
 	while (1) {
-		int data;
-		data = pop(stack);
-		if (data == 0) {
+		hasData = pop(stack, &value);
+		if (hasData == false) {
 			break;
 		}
-		printf("data:%d\n", data);
+		printf("value:%d\n", value);
 	}
 	return 0;
 }

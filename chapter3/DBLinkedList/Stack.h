@@ -2,8 +2,8 @@
 #define __STACK_H__
 
 typedef struct _Stack Stack;
-void push(Stack* stack, int data);
-int pop(Stack* stack);
+bool push(Stack* stack, int* out);
+bool pop(Stack* stack, int* out);
 int empty(Stack* stack);
 void stack_free(Stack* stack);
 Stack* stack_new();

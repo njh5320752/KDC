@@ -15,14 +15,14 @@ int main(void) {
     printf("Length of list:%d\n", d_list_length(list));
     d_list_print_all_data(list);
     tmp = d_list_nth_recursion(list, 2);
-    printf("recursion tmp index:2 data:%d\n", tmp->data);
+    printf("recursion tmp index:2 data:%d\n", d_list_get_data(tmp));
     tmp = d_list_nth_for(list, 2);
-    printf("for tmp index:2 data:%d\n", tmp->data);
+    printf("for tmp index:2 data:%d\n", d_list_get_data(tmp));
     d_list_print_all_data(list);
     d_list_remove_nth(list, 2);
     d_list_print_all_data(list);
     d_list_insert(list, 8, 2);
-    printf("index:%d\n", d_list_nth_data(list, 2));
+    printf("index:%d\n", d_list_nth(list, 2));
     d_list_print_all_data(list);
     d_list_free(list);
     printf("Length of list:%d\n", d_list_length(list));
