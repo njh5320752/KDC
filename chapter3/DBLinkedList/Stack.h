@@ -4,7 +4,7 @@
 typedef struct _Stack Stack;
 bool push(Stack* stack, int* out);
 bool pop(Stack* stack, int* out);
-int empty(Stack* stack);
+bool empty(Stack* stack);
 void stack_free(Stack* stack);
 Stack* stack_new();
 #endif
