@@ -25,7 +25,7 @@ int main(void) {
     printf("index:%d\n", d_list_nth(list, 2));
     d_list_print_all_data(list);
     d_list_free(list);
-    printf("Length of list:%d\n", d_list_length(list));
+//    printf("Length of list:%d\n", d_list_length(list));
 	test();
     return 0;
 }
@@ -54,5 +54,7 @@ void test() {
 	printf("recursion 측정 끝\n");
 	gap = (float)(end-start)/(CLOCKS_PER_SEC);
 	printf("recursion 측정 시간: %f 초\n", gap); 
+    printf("free\n");
+    d_list_free(list);
 	return;
 }
