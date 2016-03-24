@@ -3,7 +3,6 @@
 #include "Stack.h"
 int main(void) {
 	Stack* stack;
-    Stack* m;
     int out;
     int value;
 	int length;
@@ -31,6 +30,5 @@ int main(void) {
 	out = 5;
 	push(stack, &out);
 	stack_free(stack);
-    push(m, &out);
 	return 0;
 }
