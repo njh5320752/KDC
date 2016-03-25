@@ -13,11 +13,15 @@ bool push(Stack* stack, int* out) {
     if (!stack) {
         return false;
     }
-	stack->list = d_list_append((stack->list), *out);
+    stack->list = d_list_append((stack->list), *out);
     if (!(stack->list)) {
         return false;
     }
 	return true;
+}
+
+void sort(Stack* stack, int(*comp)(int data, data2)) {
+    stack->list = d_list_sort(stack->list, comp);
 }
 
 bool pop(Stack* stack, int* out) {
@@ -69,5 +73,6 @@ void stack_free(Stack* stack) {
 Stack* stack_new() {
 	Stack* stack = (Stack*) malloc(sizeof(Stack));
 	stack->list = NULL; 
+    stack->comp = NULL;
 	return stack;
 }

@@ -189,3 +189,6 @@ int d_list_nth(DList *list, int data) {
     }
     return -1;
 }
+
+DList* d_list_sort(DList* list, int(*comp)(int data, int data2)) {
+}
