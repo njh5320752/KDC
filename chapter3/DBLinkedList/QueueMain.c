@@ -29,14 +29,16 @@ int main(void) {
 		pop(queue, &value);
 		printf("value:%d\n", value);
 	}   
+	length = size(queue);
+	printf("size:%d\n", length);
 	out = 5;
 	push(queue, &out);
 	while (empty(queue)) {
 		pop(queue, &value);
 		printf("value:%d\n", value);
 	}
-	queue_free(queue);
 	length = size(queue);
 	printf("size:%d\n", length);
+	queue_free(queue);
 	return 0;
 }

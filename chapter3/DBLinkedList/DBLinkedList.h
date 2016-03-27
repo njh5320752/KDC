@@ -19,5 +19,7 @@ void d_list_free(DList* list);
 int d_list_nth(DList* list, int data);
 int d_list_get_data(DList* list);
 DList* d_list_insert_first(DList* list, int data);
-DList* d_list_sort(DList* list, int(*comp)(int data, int data2));
+void d_list_sort(DList* list, int(*comp)(int data, int data2));
+void d_list_descending_sort(DList* list);
+void d_list_ascending_sort(DList* list);
 #endif

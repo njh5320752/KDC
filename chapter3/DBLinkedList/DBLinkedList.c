@@ -190,5 +190,61 @@ int d_list_nth(DList *list, int data) {
     return -1;
 }
 
-DList* d_list_sort(DList* list, int(*comp)(int data, int data2)) {
+void d_list_sort(DList* list, int(*comp)(int data, int data2)) {
+	DList* first_node = d_list_nth_for(list, 0);
+	DList* second_node = d_list_nth_for(list, 1);
+	if (first_node == NULL || second_node == NULL) {
+		printf("Can't sort the list\n");
+		return;
+	}
+
+	int rule = comp(first_node->data, second_node->data);
+	if (rule > 0) {
+		//descending
+		d_list_descending_sort(list);
+	} else {
+		//ascending
+		d_list_ascending_sort(list);
+	}
+}
+
+void d_list_descending_sort(DList* list) {
+	int i = d_list_length(list);
+	int j;
+	int tmp;
+	DList* node1;
+	DList* node2;
+
+	for (i = i -1; i > 0; i--) {
+		for (j = 0; j < i; j++) {
+			node1 = d_list_nth_for(list, j);
+			node2 = d_list_nth_for(list, j + 1);
+			if ((node2->data) > (node1->data)) {
+				tmp = node2->data;
+				node2->data = node1->data;
+				node1->data = tmp;
+			}
+		}
+	}
+
+}
+
+void d_list_ascending_sort(DList* list) {
+	int i = d_list_length(list);
+	int tmp;
+	int j;
+	DList* node1;
+	DList* node2;
+
+	for (i = i -1; i > 0; i--) {
+		for (j = 0; j < i; j++) {
+			node1 = d_list_nth_for(list, j);
+			node2 = d_list_nth_for(list, j + 1);
+			if ((node1->data) > (node2->data)) {
+				tmp = node2->data;
+				node2->data = node1->data;
+				node1->data = tmp;
+			}
+		}
+	}
 }

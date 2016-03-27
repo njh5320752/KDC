@@ -20,8 +20,8 @@ bool push(Stack* stack, int* out) {
 	return true;
 }
 
-void sort(Stack* stack, int(*comp)(int data, data2)) {
-    stack->list = d_list_sort(stack->list, comp);
+void sort(Stack* stack, int(*comp)(int data, int data2)) {
+    d_list_sort(stack->list, comp);
 }
 
 bool pop(Stack* stack, int* out) {
@@ -73,6 +73,5 @@ void stack_free(Stack* stack) {
 Stack* stack_new() {
 	Stack* stack = (Stack*) malloc(sizeof(Stack));
 	stack->list = NULL; 
-    stack->comp = NULL;
 	return stack;
 }

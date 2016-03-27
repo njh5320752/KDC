@@ -6,7 +6,6 @@ void test();
 int main(void) {
     DList *list = NULL;
     DList *tmp;
-    list = d_list_set_sort_rule(sort_rule);
     list = d_list_append(list, 1);
     list = d_list_append(list, 2);
     list = d_list_append(list, 3);
