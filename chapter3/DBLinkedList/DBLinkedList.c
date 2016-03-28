@@ -66,7 +66,7 @@ int d_list_length(DList *list) {
     return lenght;
 }
 
-DList* d_list_remove_nth_by_data(DList* list, int data) {
+DList* d_list_remove_nth_with_data(DList* list, int data) {
     DList *tmp;
     printf("Remove data:%d\n", data);
     tmp = list;
@@ -144,6 +144,10 @@ DList* d_list_nth_for(DList* list, int n) {
 }
 
 int d_list_get_data(DList* list) {
+    if (!list) {
+        printf("Can't get data");
+        return 0;
+    }
     return list->data;
 }
 
@@ -178,7 +182,7 @@ void d_list_free(DList *list) {
     return;
 }
 
-int d_list_nth(DList *list, int data) {
+int d_list_nth_with_data(DList *list, int data) {
     int i = 0;
     while (list) {
         if (list->data == data) {
@@ -191,60 +195,30 @@ int d_list_nth(DList *list, int data) {
 }
 
 void d_list_sort(DList* list, int(*comp)(int data, int data2)) {
-	DList* first_node = d_list_nth_for(list, 0);
-	DList* second_node = d_list_nth_for(list, 1);
-	if (first_node == NULL || second_node == NULL) {
+    int i, j, tmp;
+    DList* node1;
+    DList* node2;
+
+    if (!list) {
+        printf("Can't sort the list\n");
+        return;
+    }
+	node1 = d_list_nth_for(list, 0);
+	node2 = d_list_nth_for(list, 1);
+	if ((!node1) || (!node2)) {
 		printf("Can't sort the list\n");
 		return;
 	}
-
-	int rule = comp(first_node->data, second_node->data);
-	if (rule > 0) {
-		//descending
-		d_list_descending_sort(list);
-	} else {
-		//ascending
-		d_list_ascending_sort(list);
-	}
-}
-
-void d_list_descending_sort(DList* list) {
-	int i = d_list_length(list);
-	int j;
-	int tmp;
-	DList* node1;
-	DList* node2;
-
+    i = d_list_length(list);
 	for (i = i -1; i > 0; i--) {
 		for (j = 0; j < i; j++) {
 			node1 = d_list_nth_for(list, j);
 			node2 = d_list_nth_for(list, j + 1);
-			if ((node2->data) > (node1->data)) {
+			if (comp(node1->data, node2->data)) {
 				tmp = node2->data;
 				node2->data = node1->data;
 				node1->data = tmp;
 			}
 		}
-	}
-
-}
-
-void d_list_ascending_sort(DList* list) {
-	int i = d_list_length(list);
-	int tmp;
-	int j;
-	DList* node1;
-	DList* node2;
-
-	for (i = i -1; i > 0; i--) {
-		for (j = 0; j < i; j++) {
-			node1 = d_list_nth_for(list, j);
-			node2 = d_list_nth_for(list, j + 1);
-			if ((node1->data) > (node2->data)) {
-				tmp = node2->data;
-				node2->data = node1->data;
-				node1->data = tmp;
-			}
-		}
-	}
+    }
 }

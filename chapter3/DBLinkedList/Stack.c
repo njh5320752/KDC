@@ -20,10 +20,6 @@ bool push(Stack* stack, int* out) {
 	return true;
 }
 
-void sort(Stack* stack, int(*comp)(int data, int data2)) {
-    d_list_sort(stack->list, comp);
-}
-
 bool pop(Stack* stack, int* out) {
     int n;
     if (!stack) {

@@ -2,14 +2,6 @@
 #include <stdbool.h>
 #include "Stack.h"
 
-int set_sort_rule(int data, int data2) {
-	if (data > data2) {
-		return 1; // desecending
-	} else {
-		return 0; // ascending
-	}
-}
-
 int main(void) {
 	Stack* stack;
     int out;
@@ -31,7 +23,6 @@ int main(void) {
 	push(stack, &out);
 	length = size(stack);
 	printf("size:%d\n", length);
-	sort(stack, set_sort_rule);
 
 	while (empty(stack)) {
 		pop(stack, &value);
@@ -56,7 +47,6 @@ int main(void) {
 	length = size(stack);
 	out = 9;
 	push(stack, &out);
-	sort(stack, set_sort_rule);
 	printf("size:%d\n", length);
 	stack_free(stack); 
 	return 0;
