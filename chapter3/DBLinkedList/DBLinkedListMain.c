@@ -2,8 +2,8 @@
 #include <time.h>
 #include "DBLinkedList.h"
 
-int set_sort_rule(int data, int data2) {
-    if (data > data2) {
+int set_sort_rule(int data1, int data2) {
+    if (data1 > data2) {
         return 1;
     } else {
         return 0;

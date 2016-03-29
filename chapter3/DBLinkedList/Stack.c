@@ -21,18 +21,21 @@ bool push(Stack* stack, int* out) {
 }
 
 bool pop(Stack* stack, int* out) {
-    int n;
     if (!stack) {
         return false;
     }
-    DList* list = d_list_last(stack->list);
-    if (!list) {
+    DList* lastNode = d_list_last(stack->list);
+    if (!lastNode) {
         printf("No data in list\n");
         return false;
     }
-    *out = d_list_get_data(list);
-    n = d_list_length(stack->list);
-	stack->list = d_list_remove_nth(stack->list, n-1);
+
+    if (lastNode == stack->list) {
+        stack->list = NULL;
+    }
+
+    *out = d_list_get_data(lastNode);
+    d_list_remove(lastNode);
 	return true;
 }
 

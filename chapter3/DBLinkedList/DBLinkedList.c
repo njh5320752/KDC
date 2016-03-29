@@ -172,6 +172,23 @@ DList* d_list_remove_nth(DList* list, int n) {
     return list;
 }
 
+void d_list_remove(DList *list) {
+    DList* remove;
+    if (!list) {
+        printf("No data\n");
+        return;
+    }
+    remove = list;
+    if (list->prev) {
+        list->prev->next = NULL;
+    }
+
+    if (list->next) {
+        list->next->prev = NULL;
+    }
+    free(remove);
+}
+
 void d_list_free(DList *list) {
     DList* remove;
     while(list) {
@@ -194,31 +211,24 @@ int d_list_nth_with_data(DList *list, int data) {
     return -1;
 }
 
-void d_list_sort(DList* list, int(*comp)(int data, int data2)) {
+void d_list_sort(DList* list, int(*comp)(int data1, int data2)) {
     int i, j, tmp;
-    DList* node1;
-    DList* node2;
+    DList* node;
 
-    if (!list) {
+    if (!(list) || !(list->next)) {
         printf("Can't sort the list\n");
         return;
     }
-	node1 = d_list_nth_for(list, 0);
-	node2 = d_list_nth_for(list, 1);
-	if ((!node1) || (!node2)) {
-		printf("Can't sort the list\n");
-		return;
-	}
     i = d_list_length(list);
 	for (i = i -1; i > 0; i--) {
+        node = list;
 		for (j = 0; j < i; j++) {
-			node1 = d_list_nth_for(list, j);
-			node2 = d_list_nth_for(list, j + 1);
-			if (comp(node1->data, node2->data)) {
-				tmp = node2->data;
-				node2->data = node1->data;
-				node1->data = tmp;
+			if (comp(node->data, node->next->data)) {
+				tmp = node->next->data;
+				node->next->data = node->data;
+				node->data = tmp;
 			}
+            node = node->next;
 		}
     }
 }
