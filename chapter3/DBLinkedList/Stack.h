@@ -2,7 +2,7 @@
 #define __STACK_H__
 
 typedef struct _Stack Stack;
-bool push(Stack* stack, int* out);
+bool push(Stack* stack, int in);
 bool pop(Stack* stack, int* out);
 bool top(Stack* stack, int* out);
 int size(Stack* stack);

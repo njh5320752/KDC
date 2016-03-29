@@ -4,23 +4,23 @@
 
 int main(void) {
 	Stack* stack;
-    int out;
+    int data;
     int value;
 	int length;
 	stack = stack_new();
 	length = size(stack);
 	printf("size:%d\n", length);
     
-	out = 1;
-	push(stack, &out);
-    out = 3;
-	push(stack, &out);
-    out = 5;
-	push(stack, &out);
-    out = 7;
-	push(stack, &out);
-    out = 9;
-	push(stack, &out);
+	data = 1;
+	push(stack, data);
+    data = 3;
+	push(stack, data);
+    data = 5;
+	push(stack, data);
+    data = 7;
+	push(stack, data);
+    data = 9;
+	push(stack, data);
 	length = size(stack);
 	printf("size:%d\n", length);
 
@@ -28,16 +28,16 @@ int main(void) {
 		pop(stack, &value);
 		printf("value:%d\n", value);
 	}
-	out = 9;
-	push(stack, &out);
-	out = 7;
-	push(stack, &out);
-	out = 5;
-	push(stack, &out);
-	out = 3;
-	push(stack, &out);
-	out = 1;
-	push(stack, &out);
+	data = 9;
+	push(stack, data);
+	data = 7;
+	push(stack, data);
+	data = 5;
+	push(stack, data);
+	data = 3;
+	push(stack, data);
+	data = 1;
+	push(stack, data);
 
 	printf("size:%d\n", length);
 	while (empty(stack)) {
@@ -45,8 +45,8 @@ int main(void) {
 		printf("value:%d\n", value);
 	}
 	length = size(stack);
-	out = 9;
-	push(stack, &out);
+	data = 9;
+	push(stack, data);
 	printf("size:%d\n", length);
 	stack_free(stack); 
 	return 0;

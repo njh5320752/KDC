@@ -57,6 +57,15 @@ DList* d_list_last(DList *list) {
     return list;
 }
 
+DList* d_list_first(DList *list) {
+	if (list) {
+		while (list->prev) {
+			list = list->prev;
+		}
+	}
+	return list;
+}
+
 int d_list_length(DList *list) {
     int lenght = 0;
     while (list) {
@@ -172,11 +181,12 @@ DList* d_list_remove_nth(DList* list, int n) {
     return list;
 }
 
-void d_list_remove(DList *list) {
+DList* d_list_remove(DList *list) {
     DList* remove;
+
     if (!list) {
         printf("No data\n");
-        return;
+        return list;
     }
     remove = list;
     if (list->prev) {
@@ -186,7 +196,9 @@ void d_list_remove(DList *list) {
     if (list->next) {
         list->next->prev = NULL;
     }
+	list = list->next;
     free(remove);
+	return list;
 }
 
 void d_list_free(DList *list) {

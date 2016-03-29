@@ -3,7 +3,6 @@
 
 typedef struct _DList DList;
 
-
 /* Doubly linked lists  */
 DList* d_list_append(DList *list, int data);
 DList* d_list_last(DList *list);
@@ -20,5 +19,6 @@ int d_list_nth_with_data(DList* list, int data);
 int d_list_get_data(DList* list);
 DList* d_list_insert_first(DList* list, int data);
 void d_list_sort(DList* list, int(*comp)(int data1, int data2));
-void d_list_remove(DList* list);
+DList* d_list_remove(DList* list);
+DList* d_list_first(DList *list);
 #endif

@@ -9,11 +9,11 @@ struct _Stack
 	 DList* list;
 };
 
-bool push(Stack* stack, int* out) {
+bool push(Stack* stack, int in) {
     if (!stack) {
         return false;
     }
-    stack->list = d_list_append((stack->list), *out);
+    stack->list = d_list_append((stack->list), in);
     if (!(stack->list)) {
         return false;
     }
@@ -30,12 +30,8 @@ bool pop(Stack* stack, int* out) {
         return false;
     }
 
-    if (lastNode == stack->list) {
-        stack->list = NULL;
-    }
-
     *out = d_list_get_data(lastNode);
-    d_list_remove(lastNode);
+    stack->list = d_list_remove(lastNode);
 	return true;
 }
 

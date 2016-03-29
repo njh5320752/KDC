@@ -4,7 +4,7 @@
 
 int main(void) {
 	Queue* queue;
-	int out;
+	int data;
 	int length;
 	int value;
 	queue = NULL;
@@ -12,16 +12,16 @@ int main(void) {
 	length = size(queue);
 	printf("size:%d\n", length);
 
-	out = 1;		    
-	push(queue, &out);
-	out = 2;
-	push(queue, &out);
-	out = 3;
-	push(queue, &out);
-	out = 4;
-	push(queue, &out);
-	out = 5;
-	push(queue, &out);
+	data = 1;		    
+	push(queue, data);
+	data = 2;
+	push(queue, data);
+	data = 3;
+	push(queue, data);
+	data = 4;
+	push(queue, data);
+	data = 5;
+	push(queue, data);
 	length = size(queue);
 	printf("size:%d\n", length);
 
@@ -31,8 +31,8 @@ int main(void) {
 	}   
 	length = size(queue);
 	printf("size:%d\n", length);
-	out = 5;
-	push(queue, &out);
+	data = 5;
+	push(queue, data);
 	while (empty(queue)) {
 		pop(queue, &value);
 		printf("value:%d\n", value);

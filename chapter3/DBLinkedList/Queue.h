@@ -4,7 +4,7 @@
 typedef struct _Queue Queue;
 bool empty(Queue* queue);
 int size(Queue* queue);
-bool push(Queue* queue, int* out);
+bool push(Queue* queue, int in);
 bool pop(Queue* queue, int* out);
 Queue* queue_new();
 void queue_free(Queue* queue);
