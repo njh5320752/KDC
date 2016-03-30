@@ -260,7 +260,7 @@ void d_list_insert_sort(DList* list, int(*comp)(int data1, int data2)) {
                 tmp->next->data = tmp->data;
                 printf("data:%d\n", tmp->data);
         }
-        if (tmp) {
+        if (!tmp) {
             tmp = list;
             tmp->data = remember;
         } else {
