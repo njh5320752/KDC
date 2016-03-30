@@ -244,3 +244,28 @@ void d_list_sort(DList* list, int(*comp)(int data1, int data2)) {
 		}
     }
 }
+
+void d_list_insert_sort(DList* list, int(*comp)(int data1, int data2)) {
+    int i, n, remember;
+    DList* remember_node;
+    DList* tmp;
+    remember_node = list->next;
+    n = d_list_length(list);
+
+    for (i = 1; i < n; i++) {
+        remember = remember_node->data;
+        tmp = remember_node;
+        printf("test\n");
+        while (((tmp = tmp->prev) != NULL) && comp(tmp->data, remember)) {
+                tmp->next->data = tmp->data;
+                printf("data:%d\n", tmp->data);
+        }
+        if (tmp) {
+            tmp = list;
+            tmp->data = remember;
+        } else {
+            tmp->next->data = remember;
+        }
+        remember_node = remember_node->next;
+    }
+}

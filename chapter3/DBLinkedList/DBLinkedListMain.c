@@ -15,6 +15,7 @@ int main(void) {
     DList *list = NULL;
     DList *tmp = NULL;
     DList *list2 = NULL;
+    DList *list3 = NULL;
     list = d_list_append(list, 2);
     list = d_list_append(list, 3);
     list = d_list_append(list, 6);
@@ -46,6 +47,14 @@ int main(void) {
     printf("After sort\n");
     d_list_sort(list2, set_sort_rule);
     d_list_print_all_data(list2);
+    printf("After insert sort\n");
+    list3 = d_list_append(list3, 3);
+    list3 = d_list_append(list3, 2);
+    list3 = d_list_append(list3, 1);
+    list3 = d_list_append(list3, 5);
+    list3 = d_list_append(list3, 7);
+    d_list_insert_sort(list3, set_sort_rule);
+    d_list_print_all_data(list3);
 	test();
     return 0;
 }

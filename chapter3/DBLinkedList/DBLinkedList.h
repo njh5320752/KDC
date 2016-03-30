@@ -21,4 +21,5 @@ DList* d_list_insert_first(DList* list, int data);
 void d_list_sort(DList* list, int(*comp)(int data1, int data2));
 DList* d_list_remove(DList* list);
 DList* d_list_first(DList *list);
+void d_list_insert_sort(DList* list, int(*comp)(int data1, int data2));
 #endif
