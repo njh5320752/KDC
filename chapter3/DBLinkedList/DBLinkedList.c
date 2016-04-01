@@ -228,17 +228,19 @@ int d_list_nth_with_data(DList *list, void *data) {
 }
 
 void d_list_sort(DList* list, int(*comp)(void *data1, void *data2)) {
-    int i, j, tmp;
     bool is_switched = false;
     DList* node;
+	DList* last_node;
+
     if (!(list) || !(list->next)) {
         printf("Can't sort the list\n");
         return;
     }
-    i = d_list_length(list);
-    for (i = i -1; i > 0; i--) {
+
+	last_node = d_list_last(list);
+    while (last_node) {
         node = list;
-        for (j = 0; j < i; j++) {
+        while (node != last_node) {
             if (comp(node->data, node->next->data)) {
                 switch_node(node, node->next)                
                 is_switched = true;
@@ -249,6 +251,7 @@ void d_list_sort(DList* list, int(*comp)(void *data1, void *data2)) {
             break;
         } 
         is_switched = false;
+		last_node = last->prev;
     }
 }
 

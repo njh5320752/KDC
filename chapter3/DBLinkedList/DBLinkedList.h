@@ -22,4 +22,5 @@ void d_list_sort(DList *list, int(*comp)(void *data1, void *data2));
 DList* d_list_remove(DList *list, void(*free_data)(void *data));
 DList* d_list_first(DList *list);
 void d_list_insert_sort(DList *list, int(*comp)(void *data1, void *data2));
+DList* switch_node(DList* node1, DList* node2);
 #endif
