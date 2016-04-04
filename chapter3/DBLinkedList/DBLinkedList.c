@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "DBLinkedList.h"
 
 struct _DList
@@ -77,36 +78,23 @@ int d_list_length(DList *list) {
 
 DList* d_list_remove_nth_with_data(DList *list, void *data, void(*free_data)(void *data)) {
     DList *tmp;
-    printf("Remove data:%d\n", data);
     tmp = list;
     while (tmp) {
         if (tmp->data != data) {
             tmp = tmp->next;
         } else {
-            if (tmp->prev) {
-                tmp->prev->next = tmp->next;
-            }
-            if (tmp->next) {
-                tmp->next->prev = tmp->prev;
-            }
-            if(list == tmp) {
-                list = list->next;
-            }
-            free_data(tmp->data);
-            free(tmp);
+            list = d_list_remove(list, free_data);
             break;
         }
     }
     return list;
 }
 
-void d_list_print_all_data(DList *list) {
-	int index = 0;
-	while (list) {
-		printf("index:%d, data:%d\n", index, list->data);
-		index++;
-		list = list->next;
-	}
+void d_list_print_all_data(DList* list, void(*print_data)(void* data)) {
+    while(list) {
+        print_data(list->data);
+        list = list->next;
+    }
 }
 
 DList* d_list_insert(DList *list, void *data, int n) {
@@ -161,55 +149,45 @@ void* d_list_get_data(DList *list) {
     return list->data;
 }
 
-DList* d_list_remove_nth(DList *list, int ni, void(*free_data)(void *data)) {
+DList* d_list_remove_nth(DList *list, int n, void(*free_data)(void *data)) {
     DList *remove;
     remove = d_list_nth_for(list, n);
-    if (remove == NULL) {
-        printf("Can't remove data");
-        return list;
-    }
-    printf("Remove index:%d data:%d\n", n, remove->data);
-    if (remove->prev) {
-        remove->prev->next = remove->next;
-    }
-    if (remove->next) {
-        remove->next->prev = remove->prev;
-    }
-    if(list == remove) {
-        list = list->next;
-    }
+    list = d_list_remove(remove, free_data);
     free_data(remove->data);
     free(remove);
     return list;
 }
 
-DList* d_list_remove(DList *list, void(*free_data)(void *data)) {
-    DList* remove;
-
-    if (!list) {
+DList* d_list_remove(DList *remove, void(*free_data)(void *data)) {
+    DList* first_node;
+    if (!remove) {
         printf("No data\n");
-        return list;
+        return remove;
     }
-    remove = list;
-    if (list->prev) {
-        list->prev->next = NULL;
+    first_node = d_list_first(remove);
+
+    if (remove->prev) {
+        remove->prev->next = remove->next;
     }
 
-    if (list->next) {
-        list->next->prev = NULL;
+    if (remove->next) {
+        remove->next->prev = remove->prev;
     }
-	list = list->next;
+
+    if (remove == first_node) {
+        first_node = first_node->next;
+    }
     free_data(remove->data);
     free(remove);
-	return list;
+	return first_node;
 }
 
-void d_list_free(DList *listi, void(*free_data)(void *data)) {
+void d_list_free(DList *list, void(*free_data)(void *data)) {
     DList* remove;
-    while(list) {
+    while (list) {
         remove = list;
         list = list->next;
-        free_data(remove->data)
+        free_data(remove->data);
         free(remove);
     }
     return;
@@ -227,7 +205,7 @@ int d_list_nth_with_data(DList *list, void *data) {
     return -1;
 }
 
-DList* d_list_bubble_sort(DList* list, void(*comp)(void *data1, void *data2)) {
+DList* d_list_bubble_sort(DList* list, int(*comp)(void *data1, void *data2)) {
 	bool is_switched = false;
 	DList* node;
 	DList* last_node;
@@ -235,10 +213,11 @@ DList* d_list_bubble_sort(DList* list, void(*comp)(void *data1, void *data2)) {
 
 	if (!(list) || !(list->next)) {
 		printf("Can't sort the list\n");
-		return;
+		return list;
 	}
 
 	last_node = d_list_last(list);
+    node = list;
 	while (last_node) {
 		while (node != last_node) {
 			if (!node->next || node->next == before_last_node) {
@@ -257,13 +236,13 @@ DList* d_list_bubble_sort(DList* list, void(*comp)(void *data1, void *data2)) {
 		}
 		is_switched = false;
 		before_last_node = last_node;
-		last_node = last->prev;
+		last_node = last_node->prev;
 	}
 	return node;
 }
 
-DList* d_list_insert_sort(DList* list, void(*comp)(void *data1, void *data2)) {
-	int insert_data;
+DList* d_list_insert_sort(DList* list, int(*comp)(void *data1, void *data2)) {
+	void* insert_data;
 	DList* remember_node;
 	DList* insert_node;
 	DList* sorted_node;
@@ -276,11 +255,10 @@ DList* d_list_insert_sort(DList* list, void(*comp)(void *data1, void *data2)) {
 		insert_data = insert_node->data;
 		remember_node = remember_node->next;
 		while (((sorted_node = sorted_node->prev) != NULL) && comp(sorted_node->data, insert_data)) {
-			printf("data:%d\n", sorted_node->data);
 			has_misaligned = true;
 		}
 		if (has_misaligned) {
-			list = prepend_node(sorted_node, insert_node);
+			list = d_list_prepend_node(sorted_node, insert_node, list);
 			has_misaligned = false;
 		}
 	}
@@ -307,7 +285,7 @@ DList* d_list_switch_node(DList* node1, DList* node2) {
 	return node2;
 }
 
-DList* d_list_prepend_node(DList* sorted_node, DList* inset_node, DList* list) {
+DList* d_list_prepend_node(DList* sorted_node, DList* insert_node, DList* list) {
 	DList* sorted_node_next;
 	DList* insert_node_prev = insert_node->prev;
 	DList* insert_node_next = insert_node->next;

@@ -3,10 +3,12 @@
 #include "Stack.h"
 
 int main(void) {
-	Stack* stack;
+	/*
+    Stack* stack;
     int data;
     int value;
 	int length;
+    
 	stack = stack_new();
 	length = size(stack);
 	printf("size:%d\n", length);
@@ -48,6 +50,6 @@ int main(void) {
 	data = 9;
 	push(stack, data);
 	printf("size:%d\n", length);
-	stack_free(stack); 
-	return 0;
+	stack_free(stack); */
+	return 0; 
 }

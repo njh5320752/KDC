@@ -3,10 +3,12 @@
 #include "Queue.h"
 
 int main(void) {
-	Queue* queue;
+	/*
+    Queue* queue;
 	int data;
 	int length;
 	int value;
+    
 	queue = NULL;
 	queue = queue_new();
 	length = size(queue);
@@ -39,6 +41,6 @@ int main(void) {
 	}
 	length = size(queue);
 	printf("size:%d\n", length);
-	queue_free(queue);
-	return 0;
+	queue_free(queue);*/
+	return 0; 
 }

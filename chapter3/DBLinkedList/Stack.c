@@ -9,7 +9,7 @@ struct _Stack
 	 DList* list;
 };
 
-bool push(Stack* stack, int in) {
+bool push(Stack* stack, void *in) {
     if (!stack) {
         return false;
     }
@@ -20,32 +20,34 @@ bool push(Stack* stack, int in) {
 	return true;
 }
 
-bool pop(Stack* stack, int* out) {
+void* pop(Stack* stack, void(*free_data)(void *data)) {
+    void* data;
     if (!stack) {
-        return false;
+        return NULL;
     }
     DList* lastNode = d_list_last(stack->list);
     if (!lastNode) {
         printf("No data in list\n");
-        return false;
+        return NULL;
     }
 
-    *out = d_list_get_data(lastNode);
-    stack->list = d_list_remove(lastNode);
-	return true;
+    data = d_list_get_data(lastNode);
+    stack->list = d_list_remove(lastNode, free_data);
+	return data;
 }
 
-bool top(Stack* stack, int* out) {
+void* top(Stack* stack) {
+    void* data;
     if (!stack) {
-        false;
+        return NULL;
     }
 	DList* list = d_list_nth_for(stack->list, 0);
 	if (!list) {
 		printf("No data in list\n");
-		return false;
+		return NULL;
 	}
-	*out = d_list_get_data(list);
-	return true;
+	data = d_list_get_data(list);
+	return data;
 }
 
 int size(Stack* stack) {
@@ -59,8 +61,8 @@ bool empty(Stack* stack) {
     return ((stack->list) != NULL) ? true : false;
 }
 
-void stack_free(Stack* stack) {
-     d_list_free(stack->list);
+void stack_free(Stack* stack, void(*free_data)(void *data)) {
+     d_list_free(stack->list, free_data);
      free(stack);
      return;
 }

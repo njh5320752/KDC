@@ -20,7 +20,7 @@ int size(Queue* queue) {
 	return d_list_length(queue->list);
 }
 
-bool push(Queue* queue, int in) {
+bool push(Queue* queue, void *in) {
 	if (!queue) {
 		return false;
 	}
@@ -31,16 +31,17 @@ bool push(Queue* queue, int in) {
 	return true;
 }
 
-bool pop(Queue* queue, int* out) {
+void* pop(Queue* queue, void(*free_data)(void *data)) {
 	DList* firstNode;
+    DList* data;
 	if (!queue && !(queue->list)) {
 		printf("Can't pop\n");
 		return false;
 	}
 	firstNode = d_list_first(queue->list);
-	*out = d_list_get_data(firstNode);
-	queue->list = d_list_remove(queue->list);
-	return true;
+	data = d_list_get_data(firstNode);
+	queue->list = d_list_remove(queue->list, free_data);
+	return data;
 }
 	
 Queue* queue_new() {
@@ -49,8 +50,8 @@ Queue* queue_new() {
 	return queue;
 }
 
-void queue_free(Queue* queue) {
-	d_list_free(queue->list);
+void queue_free(Queue* queue, void(*free_data)(void *data)) {
+	d_list_free(queue->list, free_data);
 	free(queue);
 	return;
 }

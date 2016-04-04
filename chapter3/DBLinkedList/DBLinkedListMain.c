@@ -1,64 +1,76 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include "DBLinkedList.h"
 
-int set_sort_rule(int data1, int data2) {
-    if (data1 > data2) {
+int set_sort_rule(void* data1, void* data2) {
+    int *d1 = (int*)data1;
+    int *d2 = (int*)data2;
+    if (*d1 > *d2) {
         return 1;
     } else {
         return 0;
     }
 }
 
-void test();
+void print_all_data(void* data) {
+    int *d = (int*)data;
+
+    printf("data:%d\n", *d);
+}
+
+DList* insert_data(int in);
+
+void free_data(void *data) {
+    int *remove = (int*)data;
+    free(remove);
+}
+//void test();
+
 int main(void) {
     DList *list = NULL;
-    DList *tmp = NULL;
-    DList *list2 = NULL;
-    DList *list3 = NULL;
-    list = d_list_append(list, 2);
-    list = d_list_append(list, 3);
-    list = d_list_append(list, 6);
-    list = d_list_append(list, 1);
-    list = d_list_append(list, 4);
-    printf("Length of list:%d\n", d_list_length(list));
-    list = d_list_remove_nth_with_data(list, 3);
-    printf("Length of list:%d\n", d_list_length(list));
-    printf("After sort\n");
-    d_list_sort(list, set_sort_rule);
-    d_list_print_all_data(list);
-    tmp = d_list_nth_recursion(list, 2);
-    printf("recursion tmp index:2 data:%d\n", d_list_get_data(tmp));
-    tmp = d_list_nth_for(list, 2);
-    printf("for tmp index:2 data:%d\n", d_list_get_data(tmp));
-    d_list_print_all_data(list);
-    d_list_remove_nth(list, 2);
-    d_list_print_all_data(list);
-    d_list_insert(list, 8, 2);
-    printf("index:%d\n", d_list_nth_with_data(list, 2));
-    d_list_print_all_data(list);
-    d_list_free(list);
-    list2 = d_list_append(list2, 3);
-    list2 = d_list_append(list2, 2);
-    list2 = d_list_append(list2, 1);
-    list2 = d_list_append(list2, 5);
-    list2 = d_list_append(list2, 7);
-    d_list_print_all_data(list2); 
-    printf("After sort\n");
-    d_list_sort(list2, set_sort_rule);
-    d_list_print_all_data(list2);
-    printf("After insert sort\n");
-    list3 = d_list_append(list3, 3);
-    list3 = d_list_append(list3, 2);
-    list3 = d_list_append(list3, 1);
-    list3 = d_list_append(list3, 5);
-    list3 = d_list_append(list3, 7);
-    d_list_insert_sort(list3, set_sort_rule);
-    d_list_print_all_data(list3);
-	test();
+    DList *tmp;
+    void* data;
+    int* test_data;
+    list = insert_data(10);
+    printf("before bubble sort\n");
+    d_list_print_all_data(list, print_all_data);
+    printf("after bubble sort\n");
+    list = d_list_bubble_sort(list, set_sort_rule);
+    d_list_print_all_data(list, print_all_data);
+    tmp = d_list_last(list);
+    data = d_list_get_data(tmp);
+    test_data = (int*)data;
+    printf("tmp:%d\n", *test_data);
+    printf("after remove data\n");
+    list = d_list_remove(tmp, free_data);
+    d_list_print_all_data(list, print_all_data);
+    tmp = d_list_first(list);
+    list = d_list_remove(tmp, free_data);
+    printf("after remove data\n");
+    d_list_print_all_data(list, print_all_data);
+	//test();
     return 0;
 }
 
+DList* insert_data(int in) {
+    int *data;
+    int i;
+    int random_number;
+    DList* list;
+    list = NULL;
+    srand((unsigned int)time(NULL));
+
+    for (i = 0; i < in; i++) {  
+        data = (int*)malloc(sizeof(int));
+        random_number = rand() % in + 1;
+        *data = random_number;
+        printf("random number:%d\n", random_number);
+        list = d_list_append(list, data);
+    }
+    return list;
+}
+/*
 void test() {
 	int max = 100;
 	float gap;
@@ -85,4 +97,4 @@ void test() {
 	printf("Total time in recursion function: %f sec\n", gap); 
     d_list_free(list);
 	return;
-}
+} */
