@@ -83,7 +83,7 @@ DList* d_list_remove_nth_with_data(DList *list, void *data, void(*free_data)(voi
         if (tmp->data != data) {
             tmp = tmp->next;
         } else {
-            list = d_list_remove(list, free_data);
+            list = d_list_remove(tmp, free_data);
             break;
         }
     }
@@ -286,24 +286,24 @@ DList* d_list_switch_node(DList* node1, DList* node2) {
 }
 
 DList* d_list_prepend_node(DList* sorted_node, DList* insert_node, DList* list) {
-	DList* sorted_node_next;
-	DList* insert_node_prev = insert_node->prev;
-	DList* insert_node_next = insert_node->next;
+    DList* sorted_node_next;
+    DList* insert_node_prev = insert_node->prev;
+    DList* insert_node_next = insert_node->next;
 
-	if (sorted_node) {
-		sorted_node_next = sorted_node->next;
-		sorted_node->next = insert_node;
-		insert_node->next = sorted_node_next;
-		sorted_node_next->prev = insert_node;
-		insert_node_next->prev = insert_node_prev;
-	} else {
-		insert_node->next = list;
-		list->prev = insert_node;
-		insert_node_prev->next = insert_node_next;
-		list = insert_node;
-	}
-	insert_node->prev = sorted_node;
-	insert_node_prev->next = insert_node_next;
-
-	return list;
+    if (sorted_node) {
+        sorted_node_next = sorted_node->next;
+        sorted_node->next = insert_node;
+        insert_node->next = sorted_node_next;
+        sorted_node_next->prev = insert_node;
+    } else {
+        insert_node->next = list;
+        list->prev = insert_node;
+        list = insert_node;
+    }
+    insert_node->prev = sorted_node;
+    insert_node_prev->next = insert_node_next;
+    if (insert_node_next) {
+        insert_node_next->prev = insert_node_prev;
+    }
+    return list;
 }

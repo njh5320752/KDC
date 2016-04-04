@@ -25,13 +25,15 @@ void free_data(void *data) {
     int *remove = (int*)data;
     free(remove);
 }
-//void test();
+void test();
 
 int main(void) {
     DList *list = NULL;
+    DList *list2 = NULL;
     DList *tmp;
     void* data;
     int* test_data;
+    int length;
     list = insert_data(10);
     printf("before bubble sort\n");
     d_list_print_all_data(list, print_all_data);
@@ -49,7 +51,22 @@ int main(void) {
     list = d_list_remove(tmp, free_data);
     printf("after remove data\n");
     d_list_print_all_data(list, print_all_data);
-	//test();
+    length = d_list_length(list);
+    printf("list length:%d\n", length);
+    tmp = d_list_nth_for(list, 5);
+    data = d_list_get_data(tmp);
+    test_data = (int*)data;
+    printf("test_data: %d\n", *test_data);
+    list = d_list_remove_nth_with_data(list, data, free_data);
+    printf("after_remove_nth_with_data\n");
+    d_list_print_all_data(list, print_all_data);
+    list2 = insert_data(10);
+    printf("before insert sort\n");
+    d_list_print_all_data(list2, print_all_data);
+    printf("after insert sort\n");
+    list2 = d_list_insert_sort(list2, set_sort_rule);
+    d_list_print_all_data(list2, print_all_data);
+    //test();
     return 0;
 }
 
