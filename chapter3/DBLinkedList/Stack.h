@@ -3,7 +3,7 @@
 
 typedef struct _Stack Stack;
 bool push(Stack *stack, void *in);
-void* pop(Stack *stack, void(*free_data)(void *data));
+void* pop(Stack *stack);
 void* top(Stack *stack);
 int size(Stack *stack);
 bool empty(Stack *stack);

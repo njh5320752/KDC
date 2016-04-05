@@ -128,6 +128,9 @@ DList* d_list_insert(DList *list, void *data, int n) {
 
 DList* d_list_nth_recursion(DList *list, int n) {
     if (n <= 0) {
+        if (!list) {
+            printf("Can't find Node\n");
+        }
         return list;
     }
     return d_list_nth_recursion(d_list_next(list), n-1);
@@ -137,6 +140,10 @@ DList* d_list_nth_for(DList *list, int n) {
     int i;
     for (i = 0; i < n && list != NULL; i++) {
         list = list->next;
+    }
+
+    if (!list) {
+        printf("Can't find Node\n");
     }
     return list;
 }
@@ -182,6 +189,29 @@ DList* d_list_remove(DList *remove, void(*free_data)(void *data)) {
 	return first_node;
 }
 
+DList* d_list_delete(DList *remove) {
+    DList* first_node;
+    if (!remove) {
+        printf("No data\n");
+        return remove;
+    }
+    first_node = d_list_first(remove);
+
+    if (remove->prev) {
+        remove->prev->next = remove->next;
+    }
+
+    if (remove->next) {
+        remove->next->prev = remove->prev;
+    }
+
+    if (remove == first_node) {
+        first_node = first_node->next;
+    }
+    free(remove);
+	return first_node;
+}
+
 void d_list_free(DList *list, void(*free_data)(void *data)) {
     DList* remove;
     while (list) {
@@ -209,7 +239,6 @@ DList* d_list_bubble_sort(DList* list, int(*comp)(void *data1, void *data2)) {
 	bool is_switched = false;
 	DList* node;
 	DList* last_node;
-	DList* before_last_node;
 
 	if (!(list) || !(list->next)) {
 		printf("Can't sort the list\n");
@@ -220,7 +249,7 @@ DList* d_list_bubble_sort(DList* list, int(*comp)(void *data1, void *data2)) {
     node = list;
 	while (last_node) {
 		while (node != last_node) {
-			if (!node->next || node->next == before_last_node) {
+			if (!node->next) {
 				last_node = node;
 				break;
 			}
@@ -235,7 +264,6 @@ DList* d_list_bubble_sort(DList* list, int(*comp)(void *data1, void *data2)) {
 			break;
 		}
 		is_switched = false;
-		before_last_node = last_node;
 		last_node = last_node->prev;
 	}
 	return node;

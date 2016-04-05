@@ -20,7 +20,7 @@ bool push(Stack* stack, void *in) {
 	return true;
 }
 
-void* pop(Stack* stack, void(*free_data)(void *data)) {
+void* pop(Stack* stack) {
     void* data;
     if (!stack) {
         return NULL;
@@ -32,7 +32,7 @@ void* pop(Stack* stack, void(*free_data)(void *data)) {
     }
 
     data = d_list_get_data(lastNode);
-    stack->list = d_list_remove(lastNode, free_data);
+    stack->list = d_list_delete(lastNode);
 	return data;
 }
 
@@ -41,7 +41,7 @@ void* top(Stack* stack) {
     if (!stack) {
         return NULL;
     }
-	DList* list = d_list_nth_for(stack->list, 0);
+	DList* list = d_list_last(stack->list);
 	if (!list) {
 		printf("No data in list\n");
 		return NULL;

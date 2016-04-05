@@ -31,16 +31,20 @@ bool push(Queue* queue, void *in) {
 	return true;
 }
 
-void* pop(Queue* queue, void(*free_data)(void *data)) {
+void* pop(Queue* queue) {
 	DList* firstNode;
     DList* data;
-	if (!queue && !(queue->list)) {
+	if (!queue) {
 		printf("Can't pop\n");
 		return false;
 	}
 	firstNode = d_list_first(queue->list);
+    if (!firstNode) {
+        printf("Can't pop\n");
+        return NULL;
+    }
 	data = d_list_get_data(firstNode);
-	queue->list = d_list_remove(queue->list, free_data);
+	queue->list = d_list_delete(queue->list);
 	return data;
 }
 	

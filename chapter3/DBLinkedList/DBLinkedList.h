@@ -24,4 +24,5 @@ DList* d_list_first(DList *list);
 DList* d_list_insert_sort(DList *list, int(*comp)(void *data1, void *data2));
 DList* d_list_switch_node(DList* node1, DList* node2);
 DList* d_list_prepend_node(DList* sorted_node, DList* insert_node, DList *list); 
+DList* d_list_delete(DList *remove);
 #endif
