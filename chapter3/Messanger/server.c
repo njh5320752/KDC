@@ -64,9 +64,9 @@ int main(int argc, char *argv[]) {
         for (fd_index = 1; fd_index < numfds; fd_index++) {
             if (poll_set[fd_index].revents & POLLIN) {
                 char a;
-                if (recv(poll_set[fd_index].fd, &a, 1024, 0) == 0) {
+                if (recv(poll_set[fd_index].fd, &a, sizeof(a), 0) == 0) {
                     printf("printf %d\n a:%d\n", poll_set[fd_index].fd, a);
-                    d_list_remove_nth_with_data(list, poll_set[fd_index].fd, NULL);
+                    d_list_remove_nth_with_data(list, (void*)poll_set[fd_index].fd, NULL);
                 }
             }
         }
