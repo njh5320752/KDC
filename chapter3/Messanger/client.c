@@ -3,26 +3,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "socket.h"
 
-char *socket_path = "";
-
-int main(int argc, char *argv[]) {
+int main(void) {
     struct sockaddr_un addr;
     char buf[100];
     int fd,rc;
 
-    if (argc > 1) {
-        socket_path = argv[1];
-    }
-
     if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
         perror("socket error");
+        close(fd);
         exit(-1);
     }
 
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, socket_path, sizeof(addr.sun_path)-1);
+    strncpy(addr.sun_path, SOCKET_NAME, sizeof(addr.sun_path)-1);
 
     if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) == -1 ) {
         perror("connect error");
@@ -39,6 +35,5 @@ int main(int argc, char *argv[]) {
             }
         }
     }
-
     return 0;
 }

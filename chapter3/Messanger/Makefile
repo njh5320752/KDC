@@ -1,4 +1,4 @@
-CFLAGS := -fPIC -O3 -g -Wall -Werror
+CFLAGS := -fPIC -O3 -g -Wall
 CC := gcc
 NAME := DBLinkedList
 SERVER := server
@@ -6,7 +6,7 @@ CLIENT := client
 
 all: $(SERVER) $(CLIENT)
 
-$(SERVER): lib$(NAME).so
+$(SERVER): lib$(NAME).so $(SERVER).o
 	$(CC) $(SERVER).c -o $@ -L. -l$(NAME)
 
 $(CLIENT): $(CLIENT).o
