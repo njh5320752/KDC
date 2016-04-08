@@ -3,7 +3,6 @@ CC := gcc
 NAME := DBLinkedList
 SERVER := server
 
-
 server: lib$(NAME).so
 	$(CC) $(SERVER).c -o $@ -L. -l$(NAME)
 

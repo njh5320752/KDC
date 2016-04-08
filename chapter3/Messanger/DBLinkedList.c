@@ -184,8 +184,12 @@ DList* d_list_remove(DList *remove, void(*free_data)(void *data)) {
     if (remove == first_node) {
         first_node = first_node->next;
     }
-    free_data(remove->data);
+
+    if (free_data) {
+        free_data(remove->data);
+    }
     free(remove);
+
 	return first_node;
 }
 
