@@ -9,11 +9,23 @@
 
 #define POLL_SIZE 32
 
+struct _Client
+{
+    int fd;
+};
+
+typedef struct _Client Client;
+
+void free_client(void *client);
+int find_data(void *data);
+
+int tmp_fd;
+
 int main(int argc, char *argv[]) {
     struct sockaddr_un addr;
+    Client *new_client;
+    Client *tmp;
     int server_fd, client_fd;
-    char buf[100];
-    int option = 1;
     int numfds = 0;
     struct pollfd poll_set[POLL_SIZE];
     int fd_index;
@@ -52,10 +64,12 @@ int main(int argc, char *argv[]) {
         if (poll(poll_set, numfds, 100000) > 0) {
             if (poll_set[0].revents & POLLIN) {
                 client_fd = accept(server_fd, NULL, NULL);
+                new_client = (Client*) malloc(sizeof(Client));
+                new_client->fd = client_fd;
                 poll_set[numfds].fd = client_fd;
                 poll_set[numfds].events = POLLIN;
                 numfds++;
-                list = d_list_append(list, (void*)client_fd);
+                list = d_list_append(list, (void*)new_client);
                 printf("Adding client on fd %d\n", client_fd);
                 length = d_list_length(list);
                 printf("client number:%d\n", length);
@@ -63,14 +77,34 @@ int main(int argc, char *argv[]) {
             }
             for (fd_index = 1; fd_index < numfds; fd_index++) {
                 if (poll_set[fd_index].revents & POLLHUP) {
-                    d_list_remove_nth_with_data(list, (void*)poll_set[fd_index].fd, NULL);
+                    tmp_fd = poll_set[fd_index].fd;
+                    tmp = (Client *) d_list_find_data(list, find_data);
+                    list = d_list_remove_nth_with_data(list, tmp, free_client);
                     printf("poll_set[fd_index]:%d\n", poll_set[fd_index].fd);
                     numfds--;
-                    poll_set[fd_index] = poll_set[numfds];
+                    if (fd_index == numfds) {
+                        poll_set[fd_index].revents = 0;
+                    } else {
+                        poll_set[fd_index] = poll_set[numfds];
+                    }
                     break;
                 }
             }
         }
     }
     return 0;
+}
+
+void free_client(void *client) {
+    Client *remove = (Client*)client;
+    free(remove);
+}
+
+int find_data(void *data) {
+    Client *client = (Client *)data;
+    if (client->fd == tmp_fd) {
+        return 1;
+    } else {
+        return 0;
+    }
 }

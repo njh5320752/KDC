@@ -1,19 +1,37 @@
-CFLAGS := -fPIC -O3 -g -Wall
-CC := gcc
-NAME := DBLinkedList
-SERVER := server
-CLIENT := client
+.SUFFIXES: .c.o
+
+DBLINKED_LIST = DBLinkedList
+
+SERVER = server
+
+CLIENT = client
+
+DBLINKED_LIST_OBJECT = DBLinkedList.o
+
+SERVER_OBJECT = server.o
+
+CLIENT_OBJECT = client.o
+
+SHARED_LIBRARY = lib$(DBLINKED_LIST).so
+
+CFLAGS += -Wall -g
+
+.c.o:
+	$(CC) -c $(CFLAGS) -o $@ $<
 
 all: $(SERVER) $(CLIENT)
 
-$(SERVER): lib$(NAME).so $(SERVER).o
-	$(CC) $(SERVER).c -o $@ -L. -l$(NAME)
+$(SERVER): $(SHARED_LIBRARY) $(SERVER_OBJECT)
+	$(CC) -L. -Wall -o $(SERVER) $(SERVER_OBJECT) -l$(DBLINKED_LIST)
 
-$(CLIENT): $(CLIENT).o
-	$(CC) $(CLIENT).c -o $@
+$(CLIENT): $(CLIENT_OBJECT)
+	$(CC) -o $(CLIENT) $(CLIENT_OBJECT)
 
-lib$(NAME).so:$(NAME).o
-	$(CC) -shared $^ -o $@
+$(SHARED_LIBRARY):$(DBLINKED_LIST_OBJECT)
+	$(CC) -shared -o $@ $^
+
+$(DBLINKED_LIST_OBJECT):
+	$(CC) -c -Wall -fpic $(DBLINKED_LIST).c
 
 clean:
-	$(RM) $(SERVER) *.o *.so*
+	$(RM) $(SERVER) $(CLIENT) *.o *.so*

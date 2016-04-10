@@ -339,3 +339,13 @@ DList* d_list_prepend_node(DList* sorted_node, DList* insert_node, DList* list) 
     }
     return list;
 }
+
+void* d_list_find_data(DList *list, int(*find_data)(void *data)) {
+    while(list) {
+        if(find_data(list->data)) {
+            return list->data;
+        }
+        list = list->next;
+    }
+    return NULL;
+}
