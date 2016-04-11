@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
                     rc = read(poll_set[fd_index].fd, buf, len);
                     printf("rc=%d, %s\n", rc, buf);
                     send_message(poll_set, poll_set[fd_index].fd, numfds, len, buf);
-
+                    printf("called pollin numfds:%d\n", numfds);
                 }
             }
         }

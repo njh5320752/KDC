@@ -50,17 +50,16 @@ int main(void) {
         if (poll(poll_set, POLL_SIZE, 100000) > 0) {
             printf("called poll\n");
             if (poll_set[0].revents & POLLIN) {
-                while ((rc = read(poll_set[0].fd, buf, sizeof(buf))) > 0) {
-                    printf("buf:%s rc:%d\n", buf, rc);
-                    send = malloc(sizeof(char)*(rc) + 4);
-                    *((int*)(send)) = rc;
-                    strncpy(send + 4, buf, rc);
-                    print_packet(send, rc + 4);
-                    printf("send:%s", ((char*)(send + 4)));
-                    test = write(fd, send, rc + 4);
-                    printf("test:%d\n",test);
-                    free(send);
-                }
+                rc = read(poll_set[0].fd, buf, sizeof(buf));
+                printf("buf:%s rc:%d\n", buf, rc);
+                send = malloc(sizeof(char)*(rc) + 4);
+                *((int*)(send)) = rc;
+                strncpy(send + 4, buf, rc);
+                print_packet(send, rc + 4);
+                printf("send:%s", ((char*)(send + 4)));
+                test = write(fd, send, rc + 4);
+                printf("test:%d\n",test);
+                free(send);
             }
 
             if (poll_set[1].revents & POLLIN) {
@@ -69,7 +68,7 @@ int main(void) {
                 rc = read(poll_set[1].fd, &len, 4);
                 printf("len = %d, rc=%d\n", len, rc);
                 rc = read(poll_set[1].fd, buf, len);
-                printf("rc=%d, read buf:%s\n", rc, buf);
+                printf("socket=%d rc=%d, read buf:%s\n", poll_set[1].fd, rc, buf);
             } else if (poll_set[1].revents & POLLHUP){
                 printf("poll_hup\n");
             }
