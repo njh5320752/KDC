@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <poll.h>
 #include "socket.h"
 
 #define POLL_SIZE 2
@@ -40,7 +41,6 @@ int main(void) {
             if (poll_set[0].revents & POLLIN) {
                 while ((rc=read(poll_set[0].revents, buf, sizeof(buf))) > 0) {
                     send = (int*)malloc(sizeof(int) * (rc + 1));
-
                     if (write(fd, buf, rc) != rc) {
                         if (rc > 0) {
                             fprintf(stderr, "partial write");

@@ -23,6 +23,7 @@ int tmp_fd;
 
 int main(int argc, char *argv[]) {
     struct sockaddr_un addr;
+    char buf[100];
     Client *new_client;
     Client *tmp;
     int server_fd, client_fd;
@@ -31,6 +32,7 @@ int main(int argc, char *argv[]) {
     int fd_index;
     DList *list;
     int length;
+    int rc;
     list = NULL;
 
     unlink(SOCKET_NAME);
@@ -68,6 +70,7 @@ int main(int argc, char *argv[]) {
                 new_client->fd = client_fd;
                 poll_set[numfds].fd = client_fd;
                 poll_set[numfds].events = POLLIN;
+                poll_set[numfds].revents = 0;
                 numfds++;
                 list = d_list_append(list, (void*)new_client);
                 printf("Adding client on fd %d\n", client_fd);
@@ -82,12 +85,11 @@ int main(int argc, char *argv[]) {
                     list = d_list_remove_nth_with_data(list, tmp, free_client);
                     printf("poll_set[fd_index]:%d\n", poll_set[fd_index].fd);
                     numfds--;
-                    if (fd_index == numfds) {
-                        poll_set[fd_index].revents = 0;
-                    } else {
-                        poll_set[fd_index] = poll_set[numfds];
-                    }
+                    poll_set[fd_index] = poll_set[numfds];
                     break;
+                } else if (poll_set[fd_index].revents & POLLIN) {
+                    rc=read(poll_set[fd_index].revents, buf, sizeof(buf));
+                    printf("%s\n", buf);
                 }
             }
         }
