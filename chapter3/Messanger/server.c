@@ -18,6 +18,7 @@ typedef struct _Client Client;
 
 void free_client(void *client);
 int find_data(void *data);
+void send_message(struct pollfd *poll_set, int got_message_client_fd, int numfds, int m_len, char* buf);
 
 int tmp_fd;
 
@@ -86,10 +87,14 @@ int main(int argc, char *argv[]) {
                     printf("poll_set[fd_index]:%d\n", poll_set[fd_index].fd);
                     numfds--;
                     poll_set[fd_index] = poll_set[numfds];
-                    break;
                 } else if (poll_set[fd_index].revents & POLLIN) {
-                    rc=read(poll_set[fd_index].revents, buf, sizeof(buf));
-                    printf("%s\n", buf);
+                    int len;
+                    rc = read(poll_set[fd_index].fd, &len, 4);
+                    printf("len = %d, rc=%d\n", len, rc);
+                    rc = read(poll_set[fd_index].fd, buf, len);
+                    printf("rc=%d, %s\n", rc, buf);
+                    send_message(poll_set, poll_set[fd_index].fd, numfds, len, buf);
+
                 }
             }
         }
@@ -109,4 +114,23 @@ int find_data(void *data) {
     } else {
         return 0;
     }
+}
+
+void send_message(struct pollfd *poll_set, int got_message_client_fd, int numfds, int m_len, char* buf) {
+    int i;
+    int write_num;
+    void *send;
+    send = malloc(sizeof(char)*(m_len) + 4);
+    *((int*)(send)) = m_len;
+    strncpy(send + 4, buf, m_len);
+    printf("send:%s", ((char*)(send + 4)));
+
+    for(i = 1; i < numfds; i++) {
+        if (poll_set[i].fd == got_message_client_fd) {
+            continue;
+        }
+        write_num = write(poll_set[i].fd, send, m_len + 4);
+        printf("write_num:%d poll_set[i].fd:%d write buf:%s", write_num, poll_set[i].fd, buf);
+    }
+    free(send);
 }

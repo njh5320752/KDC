@@ -4,9 +4,18 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <poll.h>
+#include <string.h>
 #include "socket.h"
 
 #define POLL_SIZE 2
+
+void print_packet(char *buf, int size) {
+    int i;
+    for (i = 0; i < size; i++) {
+        printf("%02X ", buf[i]);
+    }
+    printf("\n");
+}
 
 int main(void) {
     struct sockaddr_un addr;
@@ -35,27 +44,35 @@ int main(void) {
         close(fd);
         exit(-1);
     }
-    int *send;
+    void *send;
+    int test;
     while (1) {
         if (poll(poll_set, POLL_SIZE, 100000) > 0) {
+            printf("called poll\n");
             if (poll_set[0].revents & POLLIN) {
-                while ((rc=read(poll_set[0].revents, buf, sizeof(buf))) > 0) {
-                    send = (int*)malloc(sizeof(int) * (rc + 1));
-                    if (write(fd, buf, rc) != rc) {
-                        if (rc > 0) {
-                            fprintf(stderr, "partial write");
-                        } else {
-                            perror("write error");
-                            exit(-1);
-                        }
-                    }
+                while ((rc = read(poll_set[0].fd, buf, sizeof(buf))) > 0) {
+                    printf("buf:%s rc:%d\n", buf, rc);
+                    send = malloc(sizeof(char)*(rc) + 4);
+                    *((int*)(send)) = rc;
+                    strncpy(send + 4, buf, rc);
+                    print_packet(send, rc + 4);
+                    printf("send:%s", ((char*)(send + 4)));
+                    test = write(fd, send, rc + 4);
+                    printf("test:%d\n",test);
+                    free(send);
                 }
             }
 
             if (poll_set[1].revents & POLLIN) {
-
+                int len;
+                int rc;
+                rc = read(poll_set[1].fd, &len, 4);
+                printf("len = %d, rc=%d\n", len, rc);
+                rc = read(poll_set[1].fd, buf, len);
+                printf("rc=%d, read buf:%s\n", rc, buf);
+            } else if (poll_set[1].revents & POLLHUP){
+                printf("poll_hup\n");
             }
-
         }
     }
     return 0;
