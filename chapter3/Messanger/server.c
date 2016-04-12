@@ -22,9 +22,17 @@ void send_message(struct pollfd *poll_set, int got_message_client_fd, int numfds
 
 int tmp_fd;
 
+void print_packet(char *buf, int size) {
+    int i;
+    for (i = 0; i < size; i++) {
+        printf("%02X ", buf[i]);
+    }
+    printf("\n");
+}
+
 int main(int argc, char *argv[]) {
     struct sockaddr_un addr;
-    char buf[100];
+    char buf[2];
     Client *new_client;
     Client *tmp;
     int server_fd, client_fd;
@@ -89,11 +97,31 @@ int main(int argc, char *argv[]) {
                     poll_set[fd_index] = poll_set[numfds];
                 } else if (poll_set[fd_index].revents & POLLIN) {
                     int len;
+                    int tmp_len;
+                    char *send = NULL;
+                    int dest = 0;
+                    int n = 0;
                     rc = read(poll_set[fd_index].fd, &len, 4);
                     printf("len = %d, rc=%d\n", len, rc);
-                    rc = read(poll_set[fd_index].fd, buf, len);
-                    printf("rc=%d, %s\n", rc, buf);
-                    send_message(poll_set, poll_set[fd_index].fd, numfds, len, buf);
+                    rc = 0;
+                    tmp_len = len;
+                    while((rc = read(poll_set[fd_index].fd, buf, sizeof(buf))) > 0) {
+                        dest = n;
+                        n = n + rc;
+                        printf("tmp_len = %d, rc=%d n=%d\n", tmp_len, rc, n);
+                        tmp_len = tmp_len - rc;
+                        printf("size of char:%zu\n", sizeof(char));
+                        send = (char*)realloc(send, sizeof(char)*n);
+                        printf("size of send:%zu\n", sizeof(send));
+                        strncpy(send + dest, buf, n);
+                        if (tmp_len == 0) {
+                            printf("read all message\n");
+                            break;
+                        }
+                    }
+                    printf("size of buf: %zu\n", sizeof(send));
+                    print_packet(send, sizeof(send));
+                    send_message(poll_set, poll_set[fd_index].fd, numfds, len, send);
                     printf("called pollin numfds:%d\n", numfds);
                 }
             }
@@ -129,7 +157,7 @@ void send_message(struct pollfd *poll_set, int got_message_client_fd, int numfds
         if (poll_set[i].fd == got_message_client_fd) {
             continue;
         }
-        write_num = write(poll_set[i].fd, send, m_len + 4);
+        write_num = write(poll_set[i].fd, send, m_len);
         printf("write_num:%d poll_set[i].fd:%d write buf:%s", write_num, poll_set[i].fd, buf);
     }
     free(send);
