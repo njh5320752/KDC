@@ -6,22 +6,15 @@
 #include <poll.h>
 #include <string.h>
 #include "socket.h"
+#include "cm_manager.h"
 
 #define POLL_SIZE 2
-
-void print_packet(char *buf, int size) {
-    int i;
-    for (i = 0; i < size; i++) {
-        printf("%02X ", buf[i]);
-    }
-    printf("\n");
-}
 
 int main(void) {
     struct sockaddr_un addr;
     struct pollfd poll_set[POLL_SIZE];
     char buf[2];
-    int client_fd,rc;
+    int client_fd;
 
     if ((client_fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
         perror("socket error");
@@ -44,45 +37,52 @@ int main(void) {
         exit(-1);
     }
 
-    int test;
-    void *send;
-    int n = 0;
-    int dest = 0;
+    char *read_msg;
+    int msg_len;
+    int comp_result;
+    char cm_num;
+
     while (1) {
         if (poll(poll_set, POLL_SIZE, 100000) > 0) {
             printf("called poll\n");
             if (poll_set[0].revents & POLLIN) {
                 printf("read data\n");
-                send = NULL;
-                while ((rc = read(poll_set[0].fd, buf, sizeof(buf))) > 0) {
-                    printf("buf:%s rc:%d\n", buf, rc);
-                    dest = n;
-                    n = n + rc;
-                    printf("n:%d\n", n);
-                    send = realloc(send, sizeof(char)*n + sizeof(int));
-                    printf("size of send:%zu\n", sizeof(send));
-                    strncpy(send + sizeof(int) + dest, buf, n);
-                    if (buf[rc -1] != '\n') {
-                        printf("buf\n");
-                        continue;
+                read_msg = NULL;
+                msg_len = client_read_command(poll_set[0].fd, &read_msg);
+                if (msg_len >= 10 && (comp_result = strncasecmp(read_msg, COMMAND, 7) == 0)) {
+                    //test = write(client_fd, send, n + 4);
+                    if (read_msg[msg_len -1] == '\n') {
+                        printf("End of msg is new line\n");
+                        read_msg[msg_len -1] = '\0';
                     }
-                    if (n == 1) {
-                        printf("There is only new line data\n");
-                        break;
+                    cm_num = read_msg[8];
+                    switch(cm_num) {
+                        case '1':
+                            printf("cm_num:%c\n", cm_num);
+                            if (msg_len == 10) {
+                                printf("command 1\n");
+                                client_request_all_message(poll_set[1].fd);
+                            } else {
+                                printf("Please recommand\n");
+                            }
+                            break;
+                        case '3':
+                            printf("cm_num%c\n", cm_num);
+                            if (msg_len >= 11 && (read_msg[9] == ' ')) {
+                                printf("command 3\n");
+                                client_send_message(poll_set[1].fd, read_msg + 10);
+                            } else {
+                                printf("Please recommand\n");
+                            }
+                            break;
+                        default:
+                            printf("Your command numser is %c Please recommand\n", cm_num);
                     }
-                    n = n - 1;
-                    *((int*)(send)) = n;
-                    print_packet(send, n + 4);
-                    printf("send:%s", ((char*)(send + 4)));
-                    test = write(client_fd, send, n + 4);
-                    printf("test:%d\n",test);
-                    break;
+                } else {
+                    printf("Please recommand\n");
                 }
-                n = 0;
-                dest = 0;
-                rc = 0;
-                free(send);
                 printf("end read data\n");
+                free(read_msg);
             }
 
             if (poll_set[1].revents & POLLIN) {
@@ -91,7 +91,7 @@ int main(void) {
                 rc = read(poll_set[1].fd, &len, 4);
                 printf("len = %d, rc=%d\n", len, rc);
                 rc = read(poll_set[1].fd, buf, len);
-                print_packet(buf, n);
+                print_packet(buf, len);
                 printf("socket=%d rc=%d, read buf:%s\n", poll_set[1].fd, rc, buf);
             }
 
