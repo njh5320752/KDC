@@ -7,6 +7,7 @@
 #include <string.h>
 #include "socket.h"
 #include "cm_manager.h"
+#include "msg_manager.h"
 
 #define POLL_SIZE 2
 
@@ -50,7 +51,6 @@ int main(void) {
                 read_msg = NULL;
                 msg_len = client_read_command(poll_set[0].fd, &read_msg);
                 if (msg_len >= 10 && (comp_result = strncasecmp(read_msg, COMMAND, 7) == 0)) {
-                    //test = write(client_fd, send, n + 4);
                     if (read_msg[msg_len -1] == '\n') {
                         printf("End of msg is new line\n");
                         read_msg[msg_len -1] = '\0';

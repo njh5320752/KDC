@@ -340,11 +340,13 @@ DList* d_list_prepend_node(DList* sorted_node, DList* insert_node, DList* list) 
     return list;
 }
 
-void* d_list_find_data(DList *list, int(*find_data)(void *data)) {
+void* d_list_find_data(DList *list, int(*find_data)(void *data, void *client_data), void *client_data) {
+    printf("Called d_list_find_data\n");
     while(list) {
-        if(find_data(list->data)) {
+        if (find_data(list->data, client_data)) {
             return list->data;
         }
+        printf("find_data list\n");
         list = list->next;
     }
     return NULL;
