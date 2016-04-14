@@ -17,15 +17,17 @@ int main(int argc, char *argv[]) {
     int numfds = 0;
     struct pollfd poll_set[POLL_SIZE];
     int fd_index;
-    DList *list;
+    DList *client_list;
+    DList *msg_list;
     int length;
-    list = NULL;
     int tmp_fd;
+
+    client_list = NULL;
+    msg_list = NULL;
 
     unlink(SOCKET_NAME);
     if ((server_fd = socket(AF_UNIX, SOCK_STREAM,0)) == -1) {
         perror("socket error");
-        close(server_fd);
         exit(-1);
     }
 
@@ -61,17 +63,17 @@ int main(int argc, char *argv[]) {
                 poll_set[numfds].events = POLLIN;
                 poll_set[numfds].revents = 0;
                 numfds++;
-                list = server_new_client(list, client_fd);
+                client_list = server_new_client(client_list, client_fd);
                 printf("Adding client on fd %d\n", client_fd);
-                length = d_list_length(list);
+                length = d_list_length(client_list);
                 printf("client number:%d\n", length);
 
             }
             for (fd_index = 1; fd_index < numfds; fd_index++) {
                 if (poll_set[fd_index].revents & POLLHUP) {
                     tmp_fd = poll_set[fd_index].fd;
-                    remove_client = server_find_client(list, &tmp_fd);
-                    list = server_free_client(list, remove_client);
+                    remove_client = server_find_client(client_list, &tmp_fd);
+                    client_list = server_free_client(client_list, remove_client);
                     printf("poll_set[fd_index]:%d\n", poll_set[fd_index].fd);
                     numfds--;
                     poll_set[fd_index] = poll_set[numfds];
@@ -83,10 +85,10 @@ int main(int argc, char *argv[]) {
                     printf("n_btye:%d op_code:%02x\n", n_byte, op_code);
                     switch(op_code) {
                     case 0x1:
-                        server_send_all_message(list);
+                        server_send_all_message(client_list);
                         break;
                     case 0x3:
-                        server_send_message(poll_set[fd_index].fd, list);
+                        msg_list = server_send_message(poll_set[fd_index].fd, client_list, msg_list);
                         break;
                     default:
                         printf("This op_code:%02x is wrong\n", op_code);
@@ -97,4 +99,3 @@ int main(int argc, char *argv[]) {
     }
     return 0;
 }
-

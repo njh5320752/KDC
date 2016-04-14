@@ -10,6 +10,13 @@ struct _Client
     int fd;
 };
 
+struct _Message
+{
+    long int time;
+    int length;
+    char *message;
+};
+
 DList* server_new_client(DList *list, int client_fd) {
     Client *new_client = NULL;
     new_client = (Client*) malloc(sizeof(Client));
@@ -52,15 +59,55 @@ void server_send_all_message(DList *list) {
     printf("called server_send_all_message\n");
 }
 
-void server_send_message(int fd, DList *list) {
+DList* server_send_message(int fd, DList *client_list, DList *msg_list) {
     printf("called server_send_message\n");
     Client *client = NULL;
-    char *send_msg;
+    char *packet_msg;
     int client_num;
+    int i;
 
-    client = server_find_client(list, &fd);
-    send_msg = pack_msg(fd);
-    client_num = d_list_length(list);
+    client = server_find_client(client_list, &fd);
+
+    packet_msg = pack_msg(fd);
+    msg_list = server_new_message(msg_list, packet_msg);
+
+    client_num = d_list_length(client_list);
     printf("client_num:%d\n", client_num);
-    return;
+    for (i = 0; i < client_num; i++) {
+        
+    }
+    return msg_list;
+}
+
+DList* server_new_message(DList *msg_list, char *packet_msg) {
+    Message *new_msg = NULL;
+    long int time;
+    int str_len;
+    char *str;
+
+    new_msg = (Message*) malloc(sizeof(Message)); 
+
+    time = get_time_with_msg(packet_msg); 
+    new_msg->time = time;
+    printf("time:%ld\n", time);
+    
+    str_len = get_str_len_with_msg(packet_msg);
+    new_msg->length = str_len;
+    printf("str_len:%d\n", str_len);
+
+    str = get_str_with_msg(packet_msg);
+    new_msg->message = str;
+    printf("str:%s\n", str);
+
+    msg_list = d_list_append(msg_list, (void*) new_msg);
+    return msg_list;
+}
+
+char* server_pack_msg_with_msg(DList *msg_list) {
+    Message last_msg = NULL;
+    last_msg = d_list_last(msg_list);
+    if (!last_msg) {
+        printf("There is no message\n");
+        return last_msg;
+    }
 }
