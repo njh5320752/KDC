@@ -184,8 +184,12 @@ DList* d_list_remove(DList *remove, void(*free_data)(void *data)) {
     if (remove == first_node) {
         first_node = first_node->next;
     }
-    free_data(remove->data);
+
+    if (free_data) {
+        free_data(remove->data);
+    }
     free(remove);
+
 	return first_node;
 }
 
@@ -334,4 +338,16 @@ DList* d_list_prepend_node(DList* sorted_node, DList* insert_node, DList* list) 
         insert_node_next->prev = insert_node_prev;
     }
     return list;
+}
+
+void* d_list_find_data(DList *list, int(*find_data)(void *data, void *client_data), void *client_data) {
+    printf("Called d_list_find_data\n");
+    while(list) {
+        if (find_data(list->data, client_data)) {
+            return list->data;
+        }
+        printf("find_data list\n");
+        list = list->next;
+    }
+    return NULL;
 }

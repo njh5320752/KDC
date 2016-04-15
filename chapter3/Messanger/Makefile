@@ -6,6 +6,10 @@ SERVER = server
 
 CLIENT = client
 
+DBLINKED_LIST_SOURCE = ../DBLinkedList/DBLinkedList.c
+
+INC = -I../DBLinkedList/
+
 CM_MANAGER_OBJECT = cm_manager.o
 
 SM_MANAGER_OBJECT = sm_manager.o
@@ -23,7 +27,7 @@ SHARED_LIBRARY = lib$(DBLINKED_LIST).so
 CFLAGS += -Wall -g
 
 .c.o:
-	$(CC) -c $(CFLAGS) -o $@ $<
+	$(CC) $(INC) -c $(CFLAGS) -o $@ $<
 
 all: $(SERVER) $(CLIENT)
 
@@ -37,7 +41,7 @@ $(SHARED_LIBRARY):$(DBLINKED_LIST_OBJECT)
 	$(CC) -shared -o $@ $^
 
 $(DBLINKED_LIST_OBJECT):
-	$(CC) -c -Wall -fpic $(DBLINKED_LIST).c
+	$(CC) -c -Wall -fpic $(INC) $(DBLINKED_LIST_SOURCE)
 
 clean:
 	$(RM) $(SERVER) $(CLIENT) *.o *.so*
