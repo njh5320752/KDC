@@ -19,8 +19,8 @@ char* pack_msg_with_fd(int fd) {
     int time_size = sizeof(long int);
 
     n_byte = pack_time_data(fd, &send_msg, time_size);
-    str_len = pack_str_len_data(fd, &send_msg, time_size);
-    n_byte = n_byte + pack_str_data(fd, &send_msg, str_len);
+    str_len = pack_str_len_data(fd, send_msg, time_size);
+    n_byte = n_byte + pack_str_data(fd, send_msg, str_len);
 
     return send_msg;
 }
@@ -36,7 +36,7 @@ int pack_time_data(int fd, char **msg, int time_size) {
     return n_byte;
 }
 
-int pack_str_len_data(int fd, char **msg, int time_size) {
+int pack_str_len_data(int fd, char *msg, int time_size) {
     int n_byte;
     int str_len;
     int size;
@@ -45,22 +45,22 @@ int pack_str_len_data(int fd, char **msg, int time_size) {
 
     n_byte = read(fd, &str_len, length_size);
     printf("Reaed n_byte:%d\n", n_byte);
-    *msg = (char*) realloc(*msg, size);
-    *((int*)(*msg + time_size)) = str_len;
+    msg = (char*) realloc(msg, size);
+    *((int*)(msg + time_size)) = str_len;
 
-    print_packet(*msg, size);
+    print_packet(msg, size);
     return str_len;
 }
 
-int pack_str_data(int fd, char **msg, int str_len) {
+int pack_str_data(int fd, char *msg, int str_len) {
     int time_size = sizeof(long int);
     int str_len_size = sizeof(int);
     int n_byte;
 
-    *msg = (char*) realloc(*msg, time_size + str_len_size + str_len +1);
-    n_byte = read(fd, (*msg + time_size + str_len_size), str_len +1);
+    msg = (char*) realloc(msg, time_size + str_len_size + str_len +1);
+    n_byte = read(fd, (msg + time_size + str_len_size), str_len +1);
     printf("Reaed n_byte:%d\n", n_byte);
-    print_packet(*msg, time_size + str_len_size + n_byte);
+    print_packet(msg, time_size + str_len_size + n_byte);
     return n_byte;
 }
 long int get_time_with_msg(char *msg) {
@@ -100,4 +100,46 @@ int pack_msg_with_msg(Message* msg, char *packet, int dst) {
     print_packet(packet, packet_size);
 
     return packet_size;
+}
+
+Message* unpack_msg_with_fd(int fd) {
+    printf("call upack_msg_fd\n");
+    Message* new_msg;
+    long int time;
+    int str_len;
+    char *buf;
+    char *str;
+
+    int time_size = sizeof(time);
+    int str_len_size = sizeof(str_len);
+
+    buf = (char*) malloc(time_size);
+    read(fd, buf, time_size);
+
+    time = *((long int*)buf);
+    printf("time :%ld\n", time);
+
+    read(fd, buf, str_len_size);
+    str_len = *((int *)buf);
+    printf("str_len:%d\n", str_len);
+    
+    str = (char*) malloc(sizeof(str_len + 1));
+    read(fd, str, str_len + 1);
+    printf("str:%s\n", str);
+    new_msg = new_message(time, str_len, str);
+
+    free(buf);
+
+    return new_msg;
+}
+
+Message* new_message(long int time, int len, char *str) {
+    Message* new_msg;
+    new_msg = NULL;
+    new_msg = (Message*) malloc(sizeof(Message));
+    new_msg->time = time;
+    new_msg->length = len;
+    new_msg->message = str;
+
+    return new_msg;
 }

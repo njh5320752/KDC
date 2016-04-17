@@ -351,3 +351,10 @@ void* d_list_find_data(DList *list, int(*find_data)(void *data, void *client_dat
     }
     return NULL;
 }
+
+DList* d_list_next(DList *list) {
+    if (list) {
+        return list->next;
+    }
+    return list;
+}

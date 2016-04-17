@@ -48,36 +48,82 @@ int find_client_data(void *data, void *client_data) {
     }
 }
 
-void server_send_all_message(DList *list) {
+void server_send_all_message(int fd, DList *msg_list) {
     printf("called server_send_all_message\n");
+    Message *msg = NULL;
+    short op_code;
+    char *packet;
+    int op_code_size;
+    int packet_size;
+    int msg_len;
+    int msg_len_data_size;
+
+    msg_len = d_list_length(msg_list);
+    printf("msg_len:%d\n", msg_len);
+    
+    if (!msg_len) {
+        printf("There is no message\n");
+        return;
+    }
+    msg_len_data_size = sizeof(msg_len_data_size);
+
+    op_code_size = sizeof(short);
+    op_code = 0x2;
+    packet = (char*) malloc(op_code_size);
+    *((short*)packet) = op_code;
+    packet_size = op_code_size;
+
+    packet_size += msg_len_data_size;
+    packet = (char*) realloc(packet, packet_size);
+    *((int*)(packet + op_code_size)) = msg_len;
+    print_packet(packet, packet_size);
+
+    while (msg_list) {
+        msg = (Message*) d_list_get_data(msg_list);
+        packet_size = pack_msg_with_msg(msg, packet, packet_size);
+        msg_list = d_list_next(msg_list);
+    }
+
+    printf("Made op_code 2 binary\n");
+    print_packet(packet, packet_size);
+    write(fd, packet, packet_size);
 }
 
 DList* server_send_message(int fd, DList *client_list, DList *msg_list) {
     printf("called server_send_message\n");
     Client *client = NULL;
+    Message *new_msg = NULL;
     char *packet_msg;
     int client_num;
-    int i;
+    int client_fd;
 
     client = server_find_client(client_list, &fd);
 
     packet_msg = pack_msg_with_fd(fd);
-    msg_list = server_new_message(msg_list, packet_msg);
+    
+    new_msg = server_new_message(packet_msg); 
+    msg_list = d_list_append(msg_list, (void*) new_msg);
 
     client_num = d_list_length(client_list);
     printf("client_num:%d\n", client_num);
-    for (i = 0; i < client_num; i++) {
-
+    
+    while (client_list) {
+        client = (Client*) d_list_get_data(client_list);
+        client_fd = client->fd;
+        if (client_fd != fd) {
+            server_write_msg(new_msg, client_fd);
+        }
+        client_list = d_list_next(client_list);
     }
+    
     return msg_list;
 }
 
-DList* server_new_message(DList *msg_list, char *packet_msg) {
+Message* server_new_message(char *packet_msg) {
     Message *new_msg = NULL;
     long int time;
     int str_len;
     char *str;
-    char *packet;
 
     new_msg = (Message*) malloc(sizeof(Message)); 
 
@@ -93,32 +139,23 @@ DList* server_new_message(DList *msg_list, char *packet_msg) {
     new_msg->message = str;
     printf("str:%s\n", str);
 
-    msg_list = d_list_append(msg_list, (void*) new_msg);
-    packet = server_pack_msg_with_msg(msg_list);
-    
-    return msg_list;
+    return new_msg;
 }
 
-char* server_pack_msg_with_msg(DList *msg_list) {
-    Message *last_msg = NULL;
-    DList *last_node;
+void server_write_msg(Message *msg, int client_fd) {
+    printf("server_write_msg\n");
     short op_code;
     char *packet;
     int op_code_size;
     int packet_size;
+
     op_code_size = sizeof(short);
-    last_node = d_list_last(msg_list);
-    if (!last_node) {
-        printf("There is no message\n");
-        return NULL;
-    }
-    last_msg = (Message*) d_list_get_data(last_node);
     op_code = 0x4;
     packet = (char*) malloc(op_code_size);
     *((short*)packet) = op_code;
     packet_size = op_code_size;
-    packet_size = pack_msg_with_msg(last_msg, packet, packet_size);
+    packet_size = pack_msg_with_msg(msg, packet, packet_size);
     printf("packet_size=%d\n", packet_size);
     print_packet(packet, packet_size);
-    return packet;
+    write(client_fd, packet, packet_size);
 }

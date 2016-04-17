@@ -14,8 +14,9 @@
 int main(void) {
     struct sockaddr_un addr;
     struct pollfd poll_set[POLL_SIZE];
-    char buf[2];
     int client_fd;
+    DList *msg_list;
+    msg_list = NULL;
 
     if ((client_fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
         perror("socket error");
@@ -85,22 +86,32 @@ int main(void) {
                 free(read_msg);
             }
 
-            if (poll_set[1].revents & POLLIN) {
-                int len;
-                int rc;
-                rc = read(poll_set[1].fd, &len, 4);
-                printf("len = %d, rc=%d\n", len, rc);
-                rc = read(poll_set[1].fd, buf, len);
-                print_packet(buf, len);
-                printf("socket=%d rc=%d, read buf:%s\n", poll_set[1].fd, rc, buf);
-            }
-
             if (poll_set[1].revents & POLLHUP){
                 printf("poll_hup\n");
                 close(poll_set[1].fd);
                 printf("Server is not connected\n");
                 exit(-1);
             }
+
+            if (poll_set[1].revents & POLLIN) {
+                short op_code;
+                int op_code_size;
+                int fd = poll_set[1].fd;
+                int n_byte;
+                op_code_size = sizeof(op_code);
+                n_byte = read(poll_set[1].fd, &op_code, op_code_size);
+                printf("client_fd = %d, op_cde=%2x n_byte=%d\n", poll_set[1].fd, op_code, n_byte);
+                switch (op_code) {
+                    case 0x02:
+                        msg_list = client_receive_all_messages(msg_list, fd);
+                        break;
+                    case 0x04:
+                        msg_list = client_receive_message(msg_list, fd);
+                        break;
+                    default:
+                        printf("Wrong opcode:%2x\n", op_code);
+                }
+            }           
         }
     }
     return 0;

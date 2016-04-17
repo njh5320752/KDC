@@ -11,7 +11,7 @@ DList* d_list_remove_nth_with_data(DList* list, void *data, void(*free_data)(voi
 DList* d_list_insert(DList *list, void *data, int n);
 DList* d_list_nth_recursion(DList *list, int n);
 DList* d_list_nth_for(DList *list, int n);
-#define d_list_next(list) ((list) ? (((DList *)(list))->next) : NULL)
+DList* d_list_next(DList *list);
 DList* d_list_remove_nth(DList *list, int index, void(*free_data)(void *data));
 void d_list_print_all_data(DList *list, void(*print_data)(void* data));
 void d_list_free(DList* list, void(*free_data)(void *data));

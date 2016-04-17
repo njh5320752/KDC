@@ -5,6 +5,7 @@
 #include <time.h>
 #include "cm_manager.h"
 #include "msg_manager.h"
+#include "DBLinkedList.h"
 
 void client_request_all_message(int fd) {
     printf("called client_request_all_message\n");
@@ -83,4 +84,30 @@ int client_read_command(int fd, char **read_msg) {
     }
     printf("end read command\n");
     return mem_alloc_number;
+}
+
+DList* client_receive_all_messages(DList *msg_list, int fd) {
+    printf("client_receive_all_messages\n");
+    int msg_len, size, n_byte, i;
+    Message *new_msg;
+    size = sizeof(msg_len);
+
+    n_byte = read(fd, &msg_len, size);
+    printf("msg_len:%d n_byte:%d\n", msg_len, n_byte);
+
+    for(i = 0; i < msg_len; i++) {
+        new_msg = unpack_msg_with_fd(fd);
+        msg_list = d_list_append(msg_list, (void*)new_msg);
+    }
+
+    return msg_list;
+}
+
+DList* client_receive_message(DList *msg_list, int fd) {
+    printf("client_receive_message\n");
+    Message *new_msg;
+
+    new_msg = unpack_msg_with_fd(fd);
+    msg_list = d_list_append(msg_list, (void*)new_msg);
+    return msg_list;
 }

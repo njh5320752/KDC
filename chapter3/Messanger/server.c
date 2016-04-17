@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
                     printf("n_btye:%d op_code:%02x\n", n_byte, op_code);
                     switch(op_code) {
                     case 0x1:
-                        server_send_all_message(client_list);
+                        server_send_all_message(poll_set[fd_index].fd, msg_list);
                         break;
                     case 0x3:
                         msg_list = server_send_message(poll_set[fd_index].fd, client_list, msg_list);
