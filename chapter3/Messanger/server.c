@@ -12,23 +12,45 @@ struct _Client
     int fd;
 };
 
+struct _Message 
+{
+    long int time;
+    int strlen;
+    char *message;
+};
+
 struct _Server
 {
     DList *message_list;
-    DList *clietn_list;
+    DList *client_list;
 };
 
-DList* server_new_client(DList *list, int client_fd) {
+void server_add_client(Server *server, int client_fd) {
     Client *new_client = NULL;
+    DList *list = NULL;
     new_client = (Client*) malloc(sizeof(Client));
+
+    if (!new_client || !server) {
+        printf("Can't add client\n");
+        return;
+    }
+
     new_client->fd = client_fd;
-    list = d_list_append(list, (void*) new_client);
-    return list;
+    list = d_list_append(server->client_list, (void*) new_client);
+
+    if (!list) {
+        printf("Can't add client\n");
+        return;
+    }
+
+    server->client_list = list;
 }
 
-DList* server_free_client(DList *list, Client *remove_client) {
-    list = d_list_remove_nth_with_data(list, (void*) remove_client, free_client);
-    return list;
+void server_remove_client(Server *server, Client *remove_client) {
+    if (!server || !remove_client) {
+        printf("Can't free client\n");
+    }
+    server->client_list = d_list_remove_nth_with_data(server->client_list, (void*) remove_client, free_client);
 }
 
 void free_client(void *client) {
@@ -36,9 +58,9 @@ void free_client(void *client) {
     free(remove);
 }
 
-Client* server_find_client(DList *list, void *client_data) {
+Client* server_find_client(Server *server, void *client_data) {
     Client *client = NULL;
-    client = (Client*) d_list_find_data(list, find_client_data, client_data);
+    client = (Client*) d_list_find_data(server->client_list, find_client_data, client_data);
 
     if (client == NULL) {
         printf("Can't find this data:%d\n", *((int*) client_data));
@@ -58,13 +80,15 @@ int find_client_data(void *data, void *client_data) {
     }
 }
 
-void server_send_all_message(int fd, DList *msg_list) {
+void server_send_all_message(int fd, Server *server) {
     printf("called server_send_all_message\n");
     Message *msg = NULL;
+    DList *msg_list;
     short op_code;
     char *packet;
     int op_code_size, packet_size, msg_len, msg_len_data_size;
 
+    msg_list = server->message_list; 
     msg_len = d_list_length(msg_list);
     printf("msg_len:%d\n", msg_len);
 
@@ -76,7 +100,7 @@ void server_send_all_message(int fd, DList *msg_list) {
 
     op_code_size = sizeof(short);
     op_code = OP_CODE_2;
-    packet = (char*) malloc(op_code_size);
+    packet = (char*) malloc(op_code_size + msg_len_data_size + );
     *((short*)packet) = op_code;
     packet_size = op_code_size;
 

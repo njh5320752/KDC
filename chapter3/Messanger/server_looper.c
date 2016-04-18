@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
 
                 fd_controler_set_event(poll_set, client_fd, numfds);
                 numfds++;
-                client_list = server_add_client(server, client_fd);
+                server_add_client(server, client_fd);
                 printf("Adding client on fd %d\n", client_fd);
                 length = d_list_length(client_list);
                 printf("client number:%d\n", length);
