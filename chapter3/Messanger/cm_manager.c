@@ -17,13 +17,12 @@ void client_request_all_message(int fd) {
 void client_send_message(int fd, char *read_msg) {
     char * send_msg;
     time_t current_time;
-    int len;
-    int msg_size;
+    int len, msg_size;
 
     current_time = time(NULL);
     printf("called client_send_message\n");
 
-    if (current_time == ((time_t)-1)) {
+    if (current_time == ((time_t) - 1)) {
         printf("Failure to obtain the current time.\n");
         return;
     }
@@ -63,6 +62,7 @@ int client_read_command(int fd, char **read_msg) {
     int n_byte;
     int copy_dest = 0;
     int mem_alloc_number = 0;
+
     while ((n_byte = read(fd, buf, sizeof(buf))) > 0) {
         printf("start read command\n");
         printf("n_byte:%d\n", n_byte);

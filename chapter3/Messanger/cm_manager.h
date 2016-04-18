@@ -3,7 +3,7 @@
 
 #include "DBLinkedList.h"
 
-#define COMMAND "command"
+#define COMMAND "command "
 
 void client_request_all_message(int fd);
 void client_send_message(int fd, char *read_msg);

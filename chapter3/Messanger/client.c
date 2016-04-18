@@ -51,7 +51,7 @@ int main(void) {
                 printf("read data\n");
                 read_msg = NULL;
                 msg_len = client_read_command(poll_set[0].fd, &read_msg);
-                if (msg_len >= 10 && (comp_result = strncasecmp(read_msg, COMMAND, 7) == 0)) {
+                if (msg_len >= 10 && (comp_result = strncasecmp(read_msg, COMMAND, 8) == 0)) {
                     if (read_msg[msg_len -1] == '\n') {
                         printf("End of msg is new line\n");
                         read_msg[msg_len -1] = '\0';
