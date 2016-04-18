@@ -9,7 +9,7 @@
 
 void client_request_all_message(int fd) {
     printf("called client_request_all_message\n");
-    short op_code = 0x1;
+    short op_code = OP_CODE_1;
     write(fd, &op_code, sizeof(op_code));
     return;
 }
@@ -40,7 +40,7 @@ void client_send_message(int fd, char *read_msg) {
     send_msg = (char*) malloc(msg_size);
 
     printf("Put op code\n");
-    *((short*)send_msg) = 0x3;
+    *((short*)send_msg) = OP_CODE_3;
     print_packet(send_msg, msg_size);
 
     printf("Put current_time\n");

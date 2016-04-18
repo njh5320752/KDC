@@ -102,16 +102,16 @@ int main(void) {
                 n_byte = read(poll_set[1].fd, &op_code, op_code_size);
                 printf("client_fd = %d, op_cde=%2x n_byte=%d\n", poll_set[1].fd, op_code, n_byte);
                 switch (op_code) {
-                    case 0x02:
+                    case OP_CODE_2:
                         msg_list = client_receive_all_messages(msg_list, fd);
                         break;
-                    case 0x04:
+                    case OP_CODE_4:
                         msg_list = client_receive_message(msg_list, fd);
                         break;
                     default:
                         printf("Wrong opcode:%2x\n", op_code);
                 }
-            }           
+            }
         }
     }
     return 0;

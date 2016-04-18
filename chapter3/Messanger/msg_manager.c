@@ -122,7 +122,7 @@ Message* unpack_msg_with_fd(int fd) {
     read(fd, buf, str_len_size);
     str_len = *((int *)buf);
     printf("str_len:%d\n", str_len);
-    
+
     str = (char*) malloc(sizeof(str_len + 1));
     read(fd, str, str_len + 1);
     printf("str:%s\n", str);

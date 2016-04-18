@@ -15,5 +15,5 @@ Client* server_find_client(DList *list, void *client_data);
 int find_client_data(void *data, void *client_data);
 Message* server_new_message(char *packet_msg);
 void server_write_msg(Message *msg, int client_fd);
-
+void server_set_fd_event(struct pollfd *poll_set, int client_fd, int index);
 #endif

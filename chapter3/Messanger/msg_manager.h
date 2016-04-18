@@ -1,6 +1,11 @@
 #ifndef __MSG_MANAGER_H__
 #define __MSG_MANAGER_H__
 
+#define OP_CODE_1 0x01
+#define OP_CODE_2 0x02
+#define OP_CODE_3 0x03
+#define OP_CODE_4 0x04
+
 struct _Message
 {
     long int time;
