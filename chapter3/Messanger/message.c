@@ -33,7 +33,19 @@ int get_strlen_with_fd(int fd) {
     return strlen + 1;
 }
 
-int long get_time_with_msg(Message* message) {
+char* get_str_with_fd(int fd, char *str, int strlen) {
+    int n_byte;
+    n_byte = read(fd, str, strlen + 1);
+
+    if (n_byte < (strlen + 1)) {
+        printf("Failed to read str\n");
+        return NULL;
+    }
+
+    return str;
+}
+
+long int get_time_with_msg(Message* message) {
     if (!message) {
         printf("Can't find the time\n");
         return -1;

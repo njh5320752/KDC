@@ -1,30 +1,6 @@
 #include "packet.h"
 #include "message.h"
 
-char* make_req_all_msg_packet(short op_code) {
-    char *req_all_msg_packet;
-    req_all_msg_packet = make_packet_space(OP_CODE_MEMORY_SIZE);
-
-    if (!req_all_msg_packet) {
-        printf("Failed to make req all msg packet memory space\n");
-    }
-    req_all_msg_packet = write_op_code_to_packet(req_all_msg_packet, op_code);
-
-    return req_all_msg_packet;
-}
-
-char* make_res_all_msg_packet_with_fd(int fd, short op_code) {
-
-}
-
-char* make_snd_msg_and_rcv_msg+packet_with_fd(int fd, short op_code) {
-
-}
-
-char* make_req_last_msg_packet_with_fd(int fd, short op_code) {
-
-}
-
 short get_op_code_with_fd(int fd) {
     short op_code;
     int n_byte;
@@ -53,5 +29,25 @@ int write_op_code_to_packet(char *packet, short op_code) {
         printf("Fail to write op_code\n");
         return 0;
     }
-    return 1;
+    return OP_CODE_MEMORY_SIZE;
+}
+
+int write_msg_num_to_packet(char *packet, int msg_num) {
+    packet = memcpy(packet, &msg_num, MSG_NUM_MEMORY_SIZE);
+    return MSG_NUM_MEMORY_SIZE;
+}
+
+int write_time_to_packet(char *packet, long int time) {
+    packet = memcpy(packet, &time, TIME_MEMORY_SIZE);
+    return TIME_MEMORY_SIZE;
+}
+
+int write_strlen_to_packet(char *packet, int strlen) {
+    packet = memcpy(packet, &strlen, STR_LENGTH_MEMORY_SIZE);
+    return STR_LENGTH_MEMORY_SIZE;
+}
+
+int write_str_to_packet(char *packet, char *str, int strlen) {
+    packet = memcpy(packet, str, strlen + 1);
+    return strlen + 1;
 }

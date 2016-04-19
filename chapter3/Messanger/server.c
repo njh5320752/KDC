@@ -85,9 +85,14 @@ int find_client_data(void *data, void *client_data) {
     }
 }
 
-int server_get_res_all_msg_packet_with_fd(int fd, Server *server) {
+int server_get_res_all_msg_packet(Server *server, char **packet) {
+    long int time;
+    int strlen;
+    char *str;
+
     int all_msg_size, msg_len;
-    char *packet;
+    int dest = 0;
+    Message *msg;
 
     msg_len = d_list_length(server->message_list);
     if (!msg_len) {
@@ -101,11 +106,26 @@ int server_get_res_all_msg_packet_with_fd(int fd, Server *server) {
         return -1;
     }
 
-    packet = make_packet_space(OP_CODE_MEMORY_SIZE + MSG_NUM_MEMORY_SIZE + all_msg_size);
+    *packet = make_packet_space(OP_CODE_MEMORY_SIZE + MSG_NUM_MEMORY_SIZE + all_msg_size);
     if (!packet) {
         printf("Can't write data to packet\n");
         return -1;
     }
+
+    dest = write_op_code_to_packet(*packet, RES_ALL_MSG);
+    dest += write_msg_num_to_packet_with_msg((*packet + dest), msg_len);
+
+    while(msg) {
+        time = get_time_with_msg(msg);
+        strlen = get_strlen_with_msg(msg);
+        str = get_str_with_msg(msg);
+
+        dest += write_time_to_packet((*packet + dest), time);
+        dest += write_strlen_to_packet_with_msg((*packet + dest), strlen);
+        dest += write_str_to_packet((*packet + dest), str, strlen);
+        msg = d_list_next(message_node);
+    }
+    return dest;
 }
 
 int server_get_msg_list_size(Server *server) {
@@ -131,44 +151,31 @@ int server_get_msg_list_size(Server *server) {
     return all_msg_size;
 }
 
-void server_send_all_message(int fd, Server *server) {
-    printf("called server_send_all_message\n");
-    Message *msg = NULL;
-    DList *msg_list;
-    short op_code;
+int server_get_rcv_msg_packet_with_fd(int fd, char **packet) {
+    long int time;
+    int strlen;
+    char *str;
+
+    int packet_size, dest;
     char *packet;
-    int op_code_size, packet_size, msg_len, msg_len_data_size;
 
-    msg_list = server->message_list;
-    msg_len = d_list_length(msg_list);
-    printf("msg_len:%d\n", msg_len);
+    dest = 0;
 
-    if (!msg_len) {
-        printf("There is no message\n");
-        return;
-    }
-    msg_len_data_size = sizeof(msg_len_data_size);
+    time = get_time_with_fd(fd);
+    strlen = get_strlen_with_fd(fd);
 
-    op_code_size = sizeof(short);
-    op_code = OP_CODE_2;
-    packet = (char*) malloc(op_code_size + msg_len_data_size + );
-    *((short*)packet) = op_code;
-    packet_size = op_code_size;
+    str = (char*) malloc(strlen + 1);
+    str = get_str_with_fd(fd, str, strlen);
 
-    packet_size += msg_len_data_size;
-    packet = (char*) realloc(packet, packet_size);
-    *((int*)(packet + op_code_size)) = msg_len;
-    print_packet(packet, packet_size);
+    packet_size = OP_CODE_MEMORY_SIZE + TIME_MEMORY_SIZE + STR_LENGTH_MEMORY_SIZE + strlen + 1;
+    *packet = make_packet_space(packet_size);
 
-    while (msg_list) {
-        msg = (Message*) d_list_get_data(msg_list);
-        packet_size = pack_msg_with_msg(msg, packet, packet_size);
-        msg_list = d_list_next(msg_list);
-    }
+    dest = write_op_code_to_packet(*packet, RCV_MSG);
+    dest += write_time_to_packet((*packet + dest), time);
+    dest += write_strlen_to_packet((*packet + dest), strlen);
+    dest = wrtie_str_to_packet((*packet + dest), str, strlen);
 
-    printf("Made op_code 2 binary\n");
-    print_packet(packet, packet_size);
-    write(fd, packet, packet_size);
+    return dest;
 }
 
 DList* server_send_message(int fd, DList *client_list, DList *msg_list) {
@@ -221,28 +228,6 @@ Message* server_new_message(char *packet_msg) {
     printf("str:%s\n", str);
 
     return new_msg;
-}
-
-void server_write_msg(Message *msg, int client_fd) {
-    printf("server_write_msg\n");
-    short op_code;
-    char *packet;
-    int op_code_size, packet_size;
-
-    op_code_size = sizeof(short);
-    op_code = OP_CODE_4;
-
-    packet = (char*) malloc(op_code_size);
-    *((short*)packet) = op_code;
-
-    packet_size = op_code_size;
-
-    packet_size = pack_msg_with_msg(msg, packet, packet_size);
-    printf("packet_size=%d\n", packet_size);
-
-    print_packet(packet, packet_size);
-
-    write(client_fd, packet, packet_size);
 }
 
 Server* server_new() {
