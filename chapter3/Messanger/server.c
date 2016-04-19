@@ -12,27 +12,20 @@ struct _Client
     int fd;
 };
 
-struct _Message 
-{
-    long int time;
-    int strlen;
-    char *message;
-};
-
 struct _Server
 {
     DList *message_list;
     DList *client_list;
 };
 
-void server_add_client(Server *server, int client_fd) {
+int  server_add_client(Server *server, int client_fd) {
     Client *new_client = NULL;
     DList *list = NULL;
     new_client = (Client*) malloc(sizeof(Client));
 
     if (!new_client || !server) {
         printf("Can't add client\n");
-        return;
+        return 0;
     }
 
     new_client->fd = client_fd;
@@ -40,17 +33,29 @@ void server_add_client(Server *server, int client_fd) {
 
     if (!list) {
         printf("Can't add client\n");
-        return;
+        return 0;
     }
 
     server->client_list = list;
+    return 1;
 }
 
-void server_remove_client(Server *server, Client *remove_client) {
-    if (!server || !remove_client) {
+int server_remove_client(Server *server, int remove_fd) {
+    Client * remove_client;
+
+    if (!server || !(remove_client < 0)) {
         printf("Can't free client\n");
+        return 0;
     }
+
+    remove_client = server_find_client(server, &remove_fd);
+    if (!remove_client) {
+        printf("There is no client to remove\n");
+        return 0;
+    }
+
     server->client_list = d_list_remove_nth_with_data(server->client_list, (void*) remove_client, free_client);
+    return 1;
 }
 
 void free_client(void *client) {
@@ -80,6 +85,52 @@ int find_client_data(void *data, void *client_data) {
     }
 }
 
+int server_get_res_all_msg_packet_with_fd(int fd, Server *server) {
+    int all_msg_size, msg_len;
+    char *packet;
+
+    msg_len = d_list_length(server->message_list);
+    if (!msg_len) {
+        printf("There is no message\n");
+        return -1;
+    }
+
+    all_msg_size = server_get_all_msg_size(server);
+    if (!all_msg_size) {
+        printf("Can't make packet\n");
+        return -1;
+    }
+
+    packet = make_packet_space(OP_CODE_MEMORY_SIZE + MSG_NUM_MEMORY_SIZE + all_msg_size);
+    if (!packet) {
+        printf("Can't write data to packet\n");
+        return -1;
+    }
+}
+
+int server_get_msg_list_size(Server *server) {
+    int msg_len, all_msg_size;
+    int strlen = 0;
+    DList* message_node = server->message_list;
+
+    if (!message_list) {
+        printf("There is no message\n");
+        return -1;
+    }
+
+    msg_len = d_list_length(server->message_list);
+
+    while (message_node) {
+        strlen += get_strlen_with_msg(message_list);
+        message_node = d_list_next(message_node);
+    }
+
+    all_msg_size = msg_len*(TIME_MEMORY_SIZE + STR_LENGTH_MEMORY_SIZE) + strlen;
+    printf("all_msg_size:%d\n", all_msg_size);
+
+    return all_msg_size;
+}
+
 void server_send_all_message(int fd, Server *server) {
     printf("called server_send_all_message\n");
     Message *msg = NULL;
@@ -88,7 +139,7 @@ void server_send_all_message(int fd, Server *server) {
     char *packet;
     int op_code_size, packet_size, msg_len, msg_len_data_size;
 
-    msg_list = server->message_list; 
+    msg_list = server->message_list;
     msg_len = d_list_length(msg_list);
     printf("msg_len:%d\n", msg_len);
 
@@ -192,16 +243,6 @@ void server_write_msg(Message *msg, int client_fd) {
     print_packet(packet, packet_size);
 
     write(client_fd, packet, packet_size);
-}
-
-void server_set_fd_event(struct pollfd *poll_set, int client_fd, int index) {
-    if (poll_set == NULL) {
-        printf("There is no file descriptor to save event\n");
-    }
-
-    poll_set[index].fd = client_fd;
-    poll_set[index].events = POLLIN;
-    poll_set[index].revents = 0;
 }
 
 Server* server_new() {

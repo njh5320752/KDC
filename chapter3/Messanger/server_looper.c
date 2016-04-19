@@ -4,9 +4,9 @@
 #include <stdlib.h>
 #include <poll.h>
 #include <unistd.h>
-#include "DBLinkedList.h"
 #include "socket.h"
-#include "sm_manager.h"
+#include "server.h"
+#include "fd_controler.h"
 
 #define POLL_SIZE 32
 
@@ -17,15 +17,15 @@ int main(int argc, char *argv[]) {
     int numfds = 0;
     struct pollfd poll_set[POLL_SIZE];
     int fd_index;
-    DList *client_list;
-    DList *msg_list;
     int length, tmp_fd;
     Server *server;
+    server = NULL;
 
     server = server_new();
-
-    client_list = NULL;
-    msg_list = NULL;
+    if (server == NULL) {
+        printf("Can't add message and client\n");
+        return -1;
+    }
 
     unlink(SOCKET_NAME);
     if ((server_fd = socket(AF_UNIX, SOCK_STREAM,0)) == -1) {
@@ -53,6 +53,8 @@ int main(int argc, char *argv[]) {
     poll_set[0].events = POLLIN;
     numfds++;
 
+    int result;
+
     while (1) {
         if (poll(poll_set, numfds, 100000) > 0) {
             if (poll_set[0].revents & POLLIN) {
@@ -61,38 +63,42 @@ int main(int argc, char *argv[]) {
                     printf("Can't set a file descriptor event\n");
                     break;
                 }
-
-                fd_controler_set_event(poll_set, client_fd, numfds);
+                result = fd_controler_set_event(poll_set, client_fd, numfds);
+                if (!result) {
+                    printf("Failed to set event\n");
+                }
+                result = server_add_client(server, client_fd);
+                if (!result) {
+                    printf("Failed to add client\n");
+                }
                 numfds++;
-                server_add_client(server, client_fd);
                 printf("Adding client on fd %d\n", client_fd);
-                length = d_list_length(client_list);
-                printf("client number:%d\n", length);
             }
-            for (fd_index = 1; fd_index < numfds; fd_index++) {
-
+            for (fd_index = 1; fd_index < numfds; fd_index++) 
                 if (poll_set[fd_index].revents & POLLHUP) {
                     tmp_fd = poll_set[fd_index].fd;
-                    remove_client = server_find_client(client_list, &tmp_fd);
-                    client_list = server_free_client(client_list, remove_client);
-                    printf("poll_set[fd_index]:%d\n", poll_set[fd_index].fd);
-                    numfds--;
-                    poll_set[fd_index] = poll_set[numfds];
-
+                    result = server_remove_client(server, tmp_fd);
+                    if (!result > 0) {
+                        printf("Failed to remove client\n");
+                    } else {
+                        numfds--;
+                        poll_set[fd_index] = poll_set[numfds];
+                    }
                 } else if (poll_set[fd_index].revents & POLLIN) {
-                    printf("event poll in\n");
-
-                    int n_byte;
+                    char *packet_msg;
                     short op_code;
-                    n_byte = read(poll_set[fd_index].fd, &op_code, sizeof(op_code));
-                    printf("n_btye:%d op_code:%02x\n", n_byte, op_code);
+                    int client_fd;
+                    client_fd = poll_set[fd_index].fd;
+                    
+                    op_code = get_op_code_with_fd(client_fd);
 
                     switch(op_code) {
                         case OP_CODE_1:
-                            server_send_all_message(poll_set[fd_index].fd, msg_list);
+                            server_get_all_msg_packet_with_fd(client_fd, server);
+                            server_send_all_message(client_fd, msg_list);
                             break;
                         case OP_CODE_3:
-                            msg_list = server_send_message(poll_set[fd_index].fd, client_list, msg_list);
+                            msg_list = server_send_message(client_fd, client_list, msg_list);
                             break;
                         default:
                             printf("This op_code:%02x is wrong\n", op_code);
