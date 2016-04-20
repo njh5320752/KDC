@@ -1,10 +1,9 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <poll.h>
-#include <string.h>
+#include <stdlib.h>
 #include "socket.h"
 #include "client_looper.h"
 
@@ -14,8 +13,6 @@ int main(void) {
     struct sockaddr_un addr;
     struct pollfd poll_set[POLL_SIZE];
     int client_fd;
-    DList *msg_list;
-    msg_list = NULL;
 
     if ((client_fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
         perror("socket error");

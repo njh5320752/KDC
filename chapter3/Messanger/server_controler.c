@@ -44,7 +44,7 @@ int  server_add_client(Server *server, int client_fd) {
 int server_remove_client(Server *server, int remove_fd) {
     Client * remove_client;
 
-    if (!server || !(remove_client < 0)) {
+    if (!server || (remove_fd < 0)) {
         printf("Can't free client\n");
         return 0;
     }
@@ -127,7 +127,7 @@ int server_get_res_all_msg_packet(Server *server, char **packet) {
 
         dest += write_time_to_packet((*packet + dest), time);
         dest += write_strlen_to_packet((*packet + dest), strlen);
-        dest += write_str_to_packet((*packet + dest), str, strlen);
+        dest += write_str_to_packet((*packet + dest), str, strlen + 1);
         msg_list = d_list_next(msg_list);
     }
     return dest;
@@ -191,17 +191,22 @@ int server_get_rcv_msg_packet_with_fd(Server *server, int fd, char **packet) {
 int server_send_message_to_clients(Server *server, int client_fd, char *packet, int packet_size) {
     Client *client = NULL;
     DList *client_list;
+    int n_byte;
 
     client_list = server->client_list;
 
     while (client_list) {
         client = (Client*) d_list_get_data(client_list);
         if (client_fd != client->fd) {
-            write(client_fd, packet, packet_size);
+            n_byte = write(client_fd, packet, packet_size);
+            if (n_byte < packet_size) {
+                printf("Failed to write packet to clients\n");
+                return 0;
+            }
         }
         client_list = d_list_next(client_list);
     }
-    return 0;
+    return 1;
 }
 
 Server* server_new() {

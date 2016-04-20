@@ -25,6 +25,18 @@ Message* new_message(long int time, int strlen, char *str) {
     return new_msg;
 }
 
+int get_message_num_with_fd(int fd) {
+    int num, n_byte;
+
+    n_byte = read(fd, &num, MSG_NUM_MEMORY_SIZE);
+    if(n_byte < MSG_NUM_MEMORY_SIZE) {
+        printf("Failed to read MSG_NUM_MEMORY_SIZE\n");
+        return -1;
+    }
+
+    return num;
+}
+
 long int get_time_with_fd(int fd) {
     long int time;
     int n_byte;
@@ -48,7 +60,7 @@ int get_strlen_with_fd(int fd) {
         return -1;
     }
 
-    return strlen + 1;
+    return strlen;
 }
 
 char* get_str_with_fd(int fd, char *str, int strlen) {

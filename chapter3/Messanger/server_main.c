@@ -106,22 +106,24 @@ int main(int argc, char *argv[]) {
                             if (n_byte != packet_size) {
                                 printf("Failed to send all message to client\n");
                             }
+                            free(packet);
                         }
                         break;
                     case SND_MSG:
                         packet_size = server_get_rcv_msg_packet_with_fd(server, client_fd, &packet);
                         if (!packet_size) {
                             printf("Failed to make rcv_msg_packet\n");
-                        }
-                        result = server_send_message_to_clients(server, client_fd, packet, packet_size);
-                        if (!result) {
-                            printf("Failed to send message to clients\n");
+                        } else {
+                            result = server_send_message_to_clients(server, client_fd, packet, packet_size);
+                            if (!result) {
+                                printf("Failed to send message to clients\n");
+                            }
+                            free(packet);
                         }
                         break;
                     default:
                         printf("This op_code:%02x is wrong\n", op_code);
                     }
-                    free(packet);
                 }
         }
     }

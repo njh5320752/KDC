@@ -10,5 +10,6 @@ char* get_str_with_fd(int fd, char *str, int strlen);
 long int get_time_with_msg(Message* message);
 int get_strlen_with_msg(Message *message);
 char* get_str_with_msg(Message *message);
+int get_message_num_with_fd(int fd);
 
 #endif
