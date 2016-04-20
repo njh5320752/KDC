@@ -3,6 +3,10 @@
 #include <unistd.h>
 #include <poll.h>
 #include "socket.h"
+#include "server_controler.h"
+#include "packet.h"
+#include "message.h"
+#include "DBLinkedList.h"
 
 struct _Client
 {
@@ -91,13 +95,16 @@ int server_get_res_all_msg_packet(Server *server, char **packet) {
     int dest = 0;
     Message *msg;
 
+    DList *msg_list;
+    msg_list = server->message_list;
+
     msg_len = d_list_length(server->message_list);
     if (!msg_len) {
         printf("There is no message\n");
         return -1;
     }
 
-    all_msg_size = server_get_all_msg_size(server);
+    all_msg_size = server_get_msg_list_size(server);
     if (!all_msg_size) {
         printf("Can't make packet\n");
         return -1;
@@ -110,17 +117,18 @@ int server_get_res_all_msg_packet(Server *server, char **packet) {
     }
 
     dest = write_op_code_to_packet(*packet, RES_ALL_MSG);
-    dest += write_msg_num_to_packet_with_msg((*packet + dest), msg_len);
+    dest += write_msg_num_to_packet((*packet + dest), msg_len);
 
-    while(msg) {
+    while(msg_list) {
+        msg = (Message*) d_list_get_data(msg_list);
         time = get_time_with_msg(msg);
         strlen = get_strlen_with_msg(msg);
         str = get_str_with_msg(msg);
 
         dest += write_time_to_packet((*packet + dest), time);
-        dest += write_strlen_to_packet_with_msg((*packet + dest), strlen);
+        dest += write_strlen_to_packet((*packet + dest), strlen);
         dest += write_str_to_packet((*packet + dest), str, strlen);
-        msg = d_list_next(message_node);
+        msg_list = d_list_next(msg_list);
     }
     return dest;
 }
@@ -129,8 +137,9 @@ int server_get_msg_list_size(Server *server) {
     int msg_len, all_msg_size;
     int strlen = 0;
     DList* message_node = server->message_list;
+    Message* msg;
 
-    if (!message_list) {
+    if (!message_node) {
         printf("There is no message\n");
         return -1;
     }
@@ -138,7 +147,8 @@ int server_get_msg_list_size(Server *server) {
     msg_len = d_list_length(server->message_list);
 
     while (message_node) {
-        strlen += get_strlen_with_msg(message_list);
+        msg = (Message*) d_list_get_data(message_node);
+        strlen += get_strlen_with_msg(msg);
         message_node = d_list_next(message_node);
     }
 
@@ -154,7 +164,6 @@ int server_get_rcv_msg_packet_with_fd(Server *server, int fd, char **packet) {
     char *str;
 
     int packet_size, dest;
-    char *packet;
     Message *msg;
 
     dest = 0;
@@ -165,8 +174,8 @@ int server_get_rcv_msg_packet_with_fd(Server *server, int fd, char **packet) {
     str = (char*) malloc(strlen + 1);
     str = get_str_with_fd(fd, str, strlen);
 
-    new_message(time, strlen, str);
-    d_list_append(server->message_list, (void*) msg);
+    msg = new_message(time, strlen, str);
+    server->message_list = d_list_append(server->message_list, (void*) msg);
 
     packet_size = OP_CODE_MEMORY_SIZE + TIME_MEMORY_SIZE + STR_LENGTH_MEMORY_SIZE + strlen + 1;
     *packet = make_packet_space(packet_size);
@@ -174,23 +183,16 @@ int server_get_rcv_msg_packet_with_fd(Server *server, int fd, char **packet) {
     dest = write_op_code_to_packet(*packet, RCV_MSG);
     dest += write_time_to_packet((*packet + dest), time);
     dest += write_strlen_to_packet((*packet + dest), strlen);
-    dest = wrtie_str_to_packet((*packet + dest), str, strlen);
+    dest = write_str_to_packet((*packet + dest), str, strlen);
 
     return dest;
 }
 
 int server_send_message_to_clients(Server *server, int client_fd, char *packet, int packet_size) {
     Client *client = NULL;
-    Message *new_msg = NULL;
-    char *packet_msg;
-    int client_num;
+    DList *client_list;
 
-    client = server_find_client(server, &client_fd);
-    new_msg = server_new_message(packet_msg);
-    msg_list = d_list_append(msg_list, (void*) new_msg);
-
-    client_num = d_list_length(client_list);
-    printf("client_num:%d\n", client_num);
+    client_list = server->client_list;
 
     while (client_list) {
         client = (Client*) d_list_get_data(client_list);

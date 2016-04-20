@@ -2,49 +2,45 @@
 
 DBLINKED_LIST = DBLinkedList
 
-SERVER_LOOPER = server_looper
+SERVER_MAIN = server_main
 
-CLIENT = client
+CLIENT_MAIN = client_main
 
 DBLINKED_LIST_SOURCE = ../DBLinkedList/DBLinkedList.c
-
-SERVER_SOURCE = server.c
 
 INC = -I../DBLinkedList/
 
 
 CM_MANAGER_OBJECT = cm_manager.o
 
-SERVER_OBJECT = server.o
-
-PACKET_OBJECT = packet.o
 
 MESSAGE_OBJECT = message.o
 
 DBLINKED_LIST_OBJECT = DBLinkedList.o
 
-SERVER_LOOPER_OBJECT = \
-			server.o\
+SERVER_MAIN_OBJECT = \
+			server_controler.o\
 			packet.o\
 			fd_controler.o\
-			server_looper.o\
+			server_main.o\
+			message.o\
 
-CLIENT_OBJECT = client.o
+CLIENT_MAIN_OBJECT = \
+		  	client_main.o\
+		  	client_looper.o\
+		  	client_controler.o\
 
 SHARED_LIBRARY = lib$(DBLINKED_LIST).so
 
-CFLAGS += -Wall -g
+CFLAGS += -Wall -g $(INC)
 
 .c.o:
 	$(CC) -c $(CFLAGS) -o $@ $<
 
-all: $(SERVER_LOOPER) $(CLIENT)
+all: $(SERVER_MAIN) $(CLIENT)
 
-$(SERVER_LOOPER): $(SERVER_LOOPER_OBJECT)
-	$(CC) -o $(SERVER_LOOPER) $(SERVER_LOOPER_OBJECT)
-
-$(SERVER_OBJECT): $(DBLINKED_LIST_OBJECT)
-	$(CC) -c $(CFLAGS) -o $(SERVER_OBJECT) $(SERVER_SOURCE)
+$(SERVER_MAIN): $(SERVER_MAIN_OBJECT) $(SHARED_LIBRARY)
+	$(CC) -o $(SERVER_MAIN) $(SERVER_MAIN_OBJECT) -L. -l$(DBLINKED_LIST)
 
 $(CLIENT): $(CLIENT_OBJECT) $(CM_MANAGER_OBJECT) $(MSG_MANAGER)
 	$(CC) -L. -Wall -o $(CLIENT) $(CLIENT_OBJECT) $(MSG_MANAGER) $(CM_MANAGER_OBJECT) -l$(DBLINKED_LIST)
@@ -56,4 +52,4 @@ $(DBLINKED_LIST_OBJECT):
 	$(CC) -c -Wall -fpic $(INC) $(DBLINKED_LIST_SOURCE)
 
 clean:
-	$(RM) $(SERVER) $(CLIENT) *.o *.so*
+	$(RM) $(SERVER_MAIN) $(CLIENT) *.o *.so*
