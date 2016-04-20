@@ -3,9 +3,6 @@
 #include <unistd.h>
 #include <poll.h>
 #include "socket.h"
-#include "sm_manager.h"
-#include "DBLinkedList.h"
-#include "msg_manager.h"
 
 struct _Client
 {
@@ -151,13 +148,14 @@ int server_get_msg_list_size(Server *server) {
     return all_msg_size;
 }
 
-int server_get_rcv_msg_packet_with_fd(int fd, char **packet) {
+int server_get_rcv_msg_packet_with_fd(Server *server, int fd, char **packet) {
     long int time;
     int strlen;
     char *str;
 
     int packet_size, dest;
     char *packet;
+    Message *msg;
 
     dest = 0;
 
@@ -166,6 +164,9 @@ int server_get_rcv_msg_packet_with_fd(int fd, char **packet) {
 
     str = (char*) malloc(strlen + 1);
     str = get_str_with_fd(fd, str, strlen);
+
+    new_message(time, strlen, str);
+    d_list_append(server->message_list, (void*) msg);
 
     packet_size = OP_CODE_MEMORY_SIZE + TIME_MEMORY_SIZE + STR_LENGTH_MEMORY_SIZE + strlen + 1;
     *packet = make_packet_space(packet_size);
@@ -178,17 +179,13 @@ int server_get_rcv_msg_packet_with_fd(int fd, char **packet) {
     return dest;
 }
 
-DList* server_send_message(int fd, DList *client_list, DList *msg_list) {
-    printf("called server_send_message\n");
+int server_send_message_to_clients(Server *server, int client_fd, char *packet, int packet_size) {
     Client *client = NULL;
     Message *new_msg = NULL;
     char *packet_msg;
-    int client_num, client_fd;
+    int client_num;
 
-    client = server_find_client(client_list, &fd);
-
-    packet_msg = pack_msg_with_fd(fd);
-
+    client = server_find_client(server, &client_fd);
     new_msg = server_new_message(packet_msg);
     msg_list = d_list_append(msg_list, (void*) new_msg);
 
@@ -197,37 +194,12 @@ DList* server_send_message(int fd, DList *client_list, DList *msg_list) {
 
     while (client_list) {
         client = (Client*) d_list_get_data(client_list);
-        client_fd = client->fd;
-        if (client_fd != fd) {
-            server_write_msg(new_msg, client_fd);
+        if (client_fd != client->fd) {
+            write(client_fd, packet, packet_size);
         }
         client_list = d_list_next(client_list);
     }
-
-    return msg_list;
-}
-
-Message* server_new_message(char *packet_msg) {
-    Message *new_msg = NULL;
-    long int time;
-    int str_len;
-    char *str;
-
-    new_msg = (Message*) malloc(sizeof(Message));
-
-    time = get_time_with_msg(packet_msg);
-    new_msg->time = time;
-    printf("time:%ld\n", time);
-
-    str_len = get_str_len_with_msg(packet_msg);
-    new_msg->length = str_len;
-    printf("str_len:%d\n", str_len);
-
-    str = get_str_with_msg(packet_msg);
-    new_msg->message = str;
-    printf("str:%s\n", str);
-
-    return new_msg;
+    return 0;
 }
 
 Server* server_new() {

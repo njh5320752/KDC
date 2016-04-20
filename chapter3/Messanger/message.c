@@ -1,4 +1,8 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include "message.h"
+#include "packet.h"
 
 struct _Message
 {
@@ -6,6 +10,20 @@ struct _Message
     int strlen;
     char *str;
 };
+
+Message* new_message(long int time, int strlen, char *str) {
+    Message* new_msg;
+    new_msg = (Message*) malloc(sizeof(Message));
+    if (!new_msg) {
+        printf("Failed to make message\n");
+        return NULL;
+    }
+    new_msg->time = time;
+    new_msg->strlen = strlen;
+    new_msg->str = str;
+
+    return new_msg;
+}
 
 long int get_time_with_fd(int fd) {
     long int time;
@@ -57,7 +75,7 @@ long int get_time_with_msg(Message* message) {
 int get_strlen_with_msg(Message *message) {
     if (!message) {
         printf("Can't find the strlen\n");
-        return -1
+        return -1;
     }
 
     return (message->strlen + 1);

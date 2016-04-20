@@ -1,3 +1,7 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
 #include "packet.h"
 #include "message.h"
 

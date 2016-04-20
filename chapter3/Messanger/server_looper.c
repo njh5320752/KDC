@@ -6,18 +6,18 @@
 #include <unistd.h>
 #include "socket.h"
 #include "server.h"
+#include "packet.h"
 #include "fd_controler.h"
 
 #define POLL_SIZE 32
 
 int main(int argc, char *argv[]) {
     struct sockaddr_un addr;
-    Client *remove_client;
     int server_fd, client_fd;
     int numfds = 0;
     struct pollfd poll_set[POLL_SIZE];
     int fd_index;
-    int length, tmp_fd;
+    int tmp_fd;
     Server *server;
     server = NULL;
 
@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
                 numfds++;
                 printf("Adding client on fd %d\n", client_fd);
             }
-            for (fd_index = 1; fd_index < numfds; fd_index++) 
+            for (fd_index = 1; fd_index < numfds; fd_index++)
                 if (poll_set[fd_index].revents & POLLHUP) {
                     tmp_fd = poll_set[fd_index].fd;
                     result = server_remove_client(server, tmp_fd);
@@ -85,27 +85,46 @@ int main(int argc, char *argv[]) {
                         poll_set[fd_index] = poll_set[numfds];
                     }
                 } else if (poll_set[fd_index].revents & POLLIN) {
-                    char *packet_msg;
+                    char *packet;
                     short op_code;
+
                     int client_fd;
+                    int packet_size;
+
+                    int result, n_byte;
+
                     client_fd = poll_set[fd_index].fd;
-                    
                     op_code = get_op_code_with_fd(client_fd);
 
                     switch(op_code) {
-                        case OP_CODE_1:
-                            server_get_all_msg_packet_with_fd(client_fd, server);
-                            server_send_all_message(client_fd, msg_list);
-                            break;
-                        case OP_CODE_3:
-                            msg_list = server_send_message(client_fd, client_list, msg_list);
-                            break;
-                        default:
-                            printf("This op_code:%02x is wrong\n", op_code);
+                    case REQ_ALL_MSG:
+                        packet_size = server_get_res_all_msg_packet(server, &packet);
+                        if (packet_size == -1) {
+                            printf("Failed to make res_all_msg packet\n");
+                        } else {
+                            n_byte = write(client_fd, packet, packet_size);
+                            if (n_byte != packet_size) {
+                                printf("Failed to send all message to client\n");
+                            }
+                        }
+                        break;
+                    case SND_MSG:
+                        packet_size = server_get_rcv_msg_packet_with_fd(server, client_fd, &packet);
+                        if (!packet_size) {
+                            printf("Failed to make rcv_msg_packet\n");
+                        }
+                        result = server_send_message_to_clients(server, client_fd, packet, packet_size);
+                        if (!result) {
+                            printf("Failed to send message to clients\n");
+                        }
+                        break;
+                    default:
+                        printf("This op_code:%02x is wrong\n", op_code);
                     }
+                    free(packet);
                 }
-            }
         }
     }
+
     return 0;
 }

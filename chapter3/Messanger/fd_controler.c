@@ -1,6 +1,8 @@
+#include <stdio.h>
+#include <poll.h>
 #include "fd_controler.h"
 
-int fd_controler_set_event(struct pollfd *poll_set, int fd, int index) {
+int fd_controler_set_event(struct pollfd *poll_set, int client_fd, int index) {
 
     if (poll_set == NULL || index < 0) {
         printf("Can't set file descriptor event\n");
