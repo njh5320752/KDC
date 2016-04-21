@@ -11,5 +11,6 @@ int client_send_message(int fd, char *read_msg);
 int client_read_command(int fd, char **read_msg);
 int client_receive_all_messages(Client_Msg *client_msg, int fd);
 int client_receive_message(Client_Msg *client_msg, int fd);
-
+int client_request_last_message_from_first_loaction(int fd);
+int client_request_last_message_from_last_location(int fd);
 #endif

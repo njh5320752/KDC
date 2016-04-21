@@ -164,3 +164,33 @@ int client_receive_message(Client_Msg *client_msg, int fd) {
 
     return 1;
 }
+
+int client_request_last_message_from_first_loaction(int fd) {
+    int n_byte;
+    short op_code;
+
+    op_code = REQ_LAST_MSG_FR_FS;
+
+    n_byte = write(fd, &op_code, OP_CODE_MEMORY_SIZE);
+
+    if (n_byte < OP_CODE_MEMORY_SIZE) {
+        printf("Failed to write op_code\n");
+        return 0;
+    }
+    return 1;
+}
+
+int client_request_last_message_from_last_location(int fd) {
+    int n_byte;
+    short op_code;
+
+    op_code = REQ_LAST_MSG_FR_LS;
+
+    n_byte = write(fd, &op_code, OP_CODE_MEMORY_SIZE);
+
+    if (n_byte < OP_CODE_MEMORY_SIZE) {
+        printf("Failed to write op_code\n");
+        return 0;
+    }
+    return 1;
+}

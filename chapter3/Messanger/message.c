@@ -104,9 +104,8 @@ char* get_str_with_msg(Message *message) {
 
 int write_message_to_file(char *message, int msg_fd, int size) {
     int n_byte;
-    n_byte = write(msg_fd, (void*) message, size);
+    n_byte = write(msg_fd, message, size);
     printf("n_byte:%d\n", n_byte);
-    fsync(msg_fd);
 
     if (n_byte != size) {
         printf("Failed to wrtie message to file\n");

@@ -27,10 +27,10 @@ int main(int argc, char *argv[]) {
     int result, n_byte;
     int msg_fd;
 
-    msg_fd = open(MESSAGE_PATH, O_RDWR, S_IWRITE | S_IREAD);
+    msg_fd = open(MESSAGE_PATH, O_RDWR | O_APPEND | O_CREAT, S_IRWXU);
 
     if (msg_fd == -1) {
-        printf("Make message file\n");
+        printf("Failed to make message file\n");
         return -1;
     }
 
@@ -127,6 +127,12 @@ int main(int argc, char *argv[]) {
                             }
                             free(packet);
                         }
+                        break;
+                    case REQ_LAST_MSG_FR_FS:
+                        server_get_res_last_fr_fs_packet(msg_fd);
+                        break;
+                    case REQ_LAST_MSG_FR_LS:
+                        server_get_res_last_fr_ls_packet(mgs_fd);
                         break;
                     default:
                         printf("This op_code:%02x is wrong\n", op_code);

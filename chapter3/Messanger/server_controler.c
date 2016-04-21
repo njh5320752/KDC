@@ -167,6 +167,7 @@ int server_get_rcv_msg_packet_with_fd(Server *server, int fd, char **packet, int
     Message *msg;
 
     int n_byte;
+    int msg_size;
 
     dest = 0;
 
@@ -186,8 +187,10 @@ int server_get_rcv_msg_packet_with_fd(Server *server, int fd, char **packet, int
     dest += write_strlen_to_packet((*packet + dest), strlen);
     dest += write_str_to_packet((*packet + dest), str, strlen);
     
-    n_byte = write_message_to_file(*packet, msg_fd, dest); 
-    if(n_byte != dest) {
+    msg_size = dest - OP_CODE_MEMORY_SIZE;
+
+    n_byte = write_message_to_file(*packet + OP_CODE_MEMORY_SIZE, msg_fd, msg_size); 
+    if(n_byte != msg_size) {
         printf("Failed to wrtie message to file\n");
         return -1;
     }
@@ -229,4 +232,31 @@ Server* server_new() {
     new_server->client_list = NULL;
 
     return new_server;
+}
+
+int server_get_res_last_fr_fs_packet(int msg_fd, int client_fd) {
+    int off_set;
+    int strlen;
+    int n_byte;
+
+    if (msg_fd < 0) {
+        printf("Can't read messge from file\n ");
+        return -1;
+    }
+
+    off_set = lseek(msg_fd, TIME_MEMORY_SIZE, SEEK_SET);
+    if (off_set < 0) {
+        printf("Failed to move\n");
+        return -1;
+    }
+
+    strlen = get_strlen_with_fd(msg_fd);
+    printf("strlen:%d\n", strlen);
+
+    return 0;
+}
+
+int server_get_res_last_fr_ls_packet(int msg_fd) {
+    printf("server_get_res_last_fr_ls_packet\n");
+    return 0;
 }

@@ -73,6 +73,22 @@ void client_looper() {
                                 printf("Please recommand\n");
                             }
                             break;
+                        case '5':
+                            if (msg_len == 10) {
+                                printf("command 5\n");
+                                client_request_last_message_from_first_loaction(poll_set[1].fd);
+                            } else {
+                                printf("Please recommand\n");
+                            }
+                            break;
+                        case '7':
+                            if (msg_len == 10) {
+                                printf("command 7\n");
+                                client_request_last_message_from_last_location(poll_set[1].fd);
+                            } else {
+                                printf("Please recommand\n");
+                            }
+                            break;
                         default:
                             printf("Your command numser is %c Please recommand\n", cm_num);
                     }
