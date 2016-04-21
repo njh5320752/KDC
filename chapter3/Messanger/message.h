@@ -11,5 +11,6 @@ long int get_time_with_msg(Message* message);
 int get_strlen_with_msg(Message *message);
 char* get_str_with_msg(Message *message);
 int get_message_num_with_fd(int fd);
+int write_message_to_file(char *message, int msg_fd, int size);
 
 #endif

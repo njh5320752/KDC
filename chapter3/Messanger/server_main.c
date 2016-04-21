@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <poll.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "socket.h"
 #include "server_controler.h"
 #include "packet.h"
@@ -18,6 +21,19 @@ int main(int argc, char *argv[]) {
     struct pollfd poll_set[POLL_SIZE];
     int fd_index;
     int tmp_fd;
+    char *packet;
+    short op_code;
+    int packet_size;
+    int result, n_byte;
+    int msg_fd;
+
+    msg_fd = open(MESSAGE_PATH, O_RDWR, S_IWRITE | S_IREAD);
+
+    if (msg_fd == -1) {
+        printf("Make message file\n");
+        return -1;
+    }
+
     Server *server;
     server = NULL;
 
@@ -53,8 +69,6 @@ int main(int argc, char *argv[]) {
     poll_set[0].events = POLLIN;
     numfds++;
 
-    int result;
-
     while (1) {
         if (poll(poll_set, numfds, 100000) > 0) {
             if (poll_set[0].revents & POLLIN) {
@@ -85,16 +99,9 @@ int main(int argc, char *argv[]) {
                         poll_set[fd_index] = poll_set[numfds];
                     }
                 } else if (poll_set[fd_index].revents & POLLIN) {
-                    char *packet;
-                    short op_code;
-
-                    int client_fd;
-                    int packet_size;
-
-                    int result, n_byte;
-
                     client_fd = poll_set[fd_index].fd;
-                    op_code = get_op_code_with_fd(client_fd);
+                    op_code = get_op_code_with_fd(poll_set[fd_index].fd);
+                    printf("CLIENT FD: %d %d\n", poll_set[fd_index].fd, fd_index);
 
                     switch(op_code) {
                     case REQ_ALL_MSG:
@@ -110,8 +117,8 @@ int main(int argc, char *argv[]) {
                         }
                         break;
                     case SND_MSG:
-                        packet_size = server_get_rcv_msg_packet_with_fd(server, client_fd, &packet);
-                        if (!packet_size) {
+                        packet_size = server_get_rcv_msg_packet_with_fd(server, client_fd, &packet, msg_fd);
+                        if (packet_size == -1) {
                             printf("Failed to make rcv_msg_packet\n");
                         } else {
                             result = server_send_message_to_clients(server, client_fd, packet, packet_size);
@@ -123,6 +130,7 @@ int main(int argc, char *argv[]) {
                         break;
                     default:
                         printf("This op_code:%02x is wrong\n", op_code);
+                        break;
                     }
                 }
         }

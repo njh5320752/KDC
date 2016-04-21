@@ -1,30 +1,58 @@
+#include <sys/socket.h>
+#include <sys/un.h>
 #include <poll.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include "socket.h"
 #include "packet.h"
 #include "client_controler.h"
 
-void client_looper(struct pollfd *poll_set, int poll_size) {
+#define POLL_SIZE 2
+
+void client_looper() {
     Client_Msg *client_msg;
     char *read_msg;
     int msg_len;
     int comp_result;
     char cm_num;
 
+    struct sockaddr_un addr;
+    struct pollfd poll_set[POLL_SIZE];
+    int client_fd;
+
+    if ((client_fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+        perror("socket error");
+        exit(-1);
+    }
+
+    memset(&addr, 0, sizeof(addr));
+    addr.sun_family = AF_UNIX;
+    strncpy(addr.sun_path, SOCKET_NAME, sizeof(addr.sun_path) - 1);
+
+    poll_set[0].fd = STDIN_FILENO;
+    poll_set[0].events = POLLIN;
+
+    poll_set[1].fd = client_fd;
+    poll_set[1].events = POLLIN;
+
+    if (connect(client_fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
+        perror("connect error");
+        close(client_fd);
+        exit(-1);
+    }
+ 
     client_msg = new_Client_Msg();
 
     while (1) {
-        if (poll(poll_set, poll_size, 100000) > 0) {
+        if (poll(poll_set, POLL_SIZE, 100000) > 0) {
             printf("called poll\n");
             if (poll_set[0].revents & POLLIN) {
-                printf("read data\n");
                 read_msg = NULL;
                 msg_len = client_read_command(poll_set[0].fd, &read_msg);
                 if (msg_len >= 10 && (comp_result = strncasecmp(read_msg, COMMAND, 8) == 0)) {
                     if (read_msg[msg_len -1] == '\n') {
-                        printf("End of msg is new line\n");
                         read_msg[msg_len -1] = '\0';
                     }
                     cm_num = read_msg[8];
@@ -51,7 +79,6 @@ void client_looper(struct pollfd *poll_set, int poll_size) {
                 } else {
                     printf("Please recommand\n");
                 }
-                printf("end read data\n");
                 free(read_msg);
             }
 

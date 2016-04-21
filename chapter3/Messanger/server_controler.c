@@ -127,7 +127,7 @@ int server_get_res_all_msg_packet(Server *server, char **packet) {
 
         dest += write_time_to_packet((*packet + dest), time);
         dest += write_strlen_to_packet((*packet + dest), strlen);
-        dest += write_str_to_packet((*packet + dest), str, strlen + 1);
+        dest += write_str_to_packet((*packet + dest), str, strlen);
         msg_list = d_list_next(msg_list);
     }
     return dest;
@@ -158,7 +158,7 @@ int server_get_msg_list_size(Server *server) {
     return all_msg_size;
 }
 
-int server_get_rcv_msg_packet_with_fd(Server *server, int fd, char **packet) {
+int server_get_rcv_msg_packet_with_fd(Server *server, int fd, char **packet, int msg_fd) {
     long int time;
     int strlen;
     char *str;
@@ -166,24 +166,33 @@ int server_get_rcv_msg_packet_with_fd(Server *server, int fd, char **packet) {
     int packet_size, dest;
     Message *msg;
 
+    int n_byte;
+
     dest = 0;
 
     time = get_time_with_fd(fd);
     strlen = get_strlen_with_fd(fd);
-
-    str = (char*) malloc(strlen + 1);
+    str = (char*) malloc(strlen);
     str = get_str_with_fd(fd, str, strlen);
 
     msg = new_message(time, strlen, str);
     server->message_list = d_list_append(server->message_list, (void*) msg);
 
-    packet_size = OP_CODE_MEMORY_SIZE + TIME_MEMORY_SIZE + STR_LENGTH_MEMORY_SIZE + strlen + 1;
+    packet_size = OP_CODE_MEMORY_SIZE + TIME_MEMORY_SIZE + STR_LENGTH_MEMORY_SIZE + strlen;
     *packet = make_packet_space(packet_size);
 
     dest = write_op_code_to_packet(*packet, RCV_MSG);
     dest += write_time_to_packet((*packet + dest), time);
     dest += write_strlen_to_packet((*packet + dest), strlen);
-    dest = write_str_to_packet((*packet + dest), str, strlen);
+    dest += write_str_to_packet((*packet + dest), str, strlen);
+    
+    n_byte = write_message_to_file(*packet, msg_fd, dest); 
+    if(n_byte != dest) {
+        printf("Failed to wrtie message to file\n");
+        return -1;
+    }
+    printf("dest:%d\n", dest);
+    print_packet(*packet, dest);
 
     return dest;
 }
@@ -192,13 +201,15 @@ int server_send_message_to_clients(Server *server, int client_fd, char *packet, 
     Client *client = NULL;
     DList *client_list;
     int n_byte;
+    int fd;
 
     client_list = server->client_list;
 
     while (client_list) {
         client = (Client*) d_list_get_data(client_list);
-        if (client_fd != client->fd) {
-            n_byte = write(client_fd, packet, packet_size);
+        fd = client->fd;
+        if (client_fd != fd) {
+            n_byte = write(fd, packet, packet_size);
             if (n_byte < packet_size) {
                 printf("Failed to write packet to clients\n");
                 return 0;

@@ -13,6 +13,8 @@
 #define REQ_LAST_MSG     0x05
 #define RES_LAST_MSG     0x06
 
+void print_data(void *buf, int size);
+void print_packet(char *buf, int size);
 short get_op_code_with_fd(int fd);
 char* make_packet_space(int size);
 int write_op_code_to_packet(char *packet, short op_code);

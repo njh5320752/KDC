@@ -48,22 +48,19 @@ int client_send_message(int fd, char *read_msg) {
     dest = 0;
 
     current_time = time(NULL);
-    printf("called client_send_message\n");
 
     if (current_time == ((time_t) - 1)) {
         printf("Failure to obtain the current time.\n");
         return 0;
     }
 
-    printf("read_msg:%s\n", read_msg);
     len = strlen(read_msg);
-    printf("read msg len:%d\n", len);
 
     if (len == 0) {
         printf("There is no data in your command\n");
         return 0;
     }
-    msg_size = sizeof(short) + sizeof(long int) + sizeof(int) + len + 1;
+    msg_size = sizeof(short) + sizeof(long int) + sizeof(int) + len;
     packet = make_packet_space(msg_size);
 
     if (!packet) {
@@ -71,7 +68,6 @@ int client_send_message(int fd, char *read_msg) {
         return 0;
     }
 
-    printf("Put op code\n");
     dest = write_op_code_to_packet(packet, SND_MSG);
     dest += write_time_to_packet(packet + dest, current_time);
     dest += write_strlen_to_packet(packet + dest, len);
@@ -82,7 +78,10 @@ int client_send_message(int fd, char *read_msg) {
         return 0;
     }
 
+    print_packet(packet, msg_size);
     n_byte = write(fd, packet, msg_size);
+
+    printf("write size : %d\n", n_byte);
 
     if (n_byte < msg_size) {
         printf("Failed to write\n");
@@ -97,7 +96,6 @@ int client_read_command(int fd, char **read_msg) {
     int n_byte;
     int copy_dest = 0;
     int mem_alloc_number = 0;
-    printf("start read command\n");
     while ((n_byte = read(fd, buf, sizeof(buf))) > 0) {
         copy_dest = mem_alloc_number;
         mem_alloc_number = mem_alloc_number + n_byte;
@@ -112,12 +110,10 @@ int client_read_command(int fd, char **read_msg) {
         }
         break;
     }
-    printf("end read command\n");
     return mem_alloc_number;
 }
 
 int client_receive_all_messages(Client_Msg *client_msg, int fd) {
-    printf("client_receive_all_messages\n");
     int msg_num, i;
     msg_num = get_message_num_with_fd(fd);
     printf("msg_num:%d\n", msg_num);
@@ -136,9 +132,32 @@ int client_receive_message(Client_Msg *client_msg, int fd) {
     Message *new_msg;
 
     time = get_time_with_fd(fd);
+    if (time == -1) {
+        printf("Failed to get time from fd\n");
+        return 0;
+    }
+
+    print_data(&time, TIME_MEMORY_SIZE);
+
     strlen = get_strlen_with_fd(fd);
-    str = (char*) malloc(strlen + 1);
-    get_str_with_fd(fd, str, strlen + 1);
+    if (strlen == -1) {
+        printf("Failed to get strlen from fd\n");
+        return 0;
+    }
+
+    print_data(&strlen, STR_LENGTH_MEMORY_SIZE);
+
+    str = (char*) malloc(strlen);
+    if (!str) {
+        printf("Failed to make str space\n");
+    }
+
+    str = get_str_with_fd(fd, str, strlen);
+    if (!str) {
+        printf("Failed to get str from fd\n");
+    }
+
+    print_packet(str, strlen);
 
     new_msg = new_message(time, strlen, str);
     client_msg->message_list = d_list_append(client_msg->message_list, (void*)new_msg);

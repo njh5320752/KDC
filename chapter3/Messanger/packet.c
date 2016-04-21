@@ -5,12 +5,25 @@
 #include "packet.h"
 #include "message.h"
 
+void print_packet(char *buf, int size) {
+    print_data(buf, size);
+    printf("\n");
+}
+
+void print_data(void *buf, int size) {
+    int i;
+    for (i = 0; i < size; i++) {
+        printf("%02X ", *((char*)buf + i));
+    }
+}
+
 short get_op_code_with_fd(int fd) {
     short op_code;
     int n_byte;
     n_byte = read(fd, &op_code, OP_CODE_MEMORY_SIZE);
+    printf("OP CODE : %d\n", op_code);
     if (n_byte < OP_CODE_MEMORY_SIZE) {
-        printf("Failed to read op_code:%02x\n", op_code);
+        printf("Failed to read op_code:%d %d\n",op_code, n_byte);
     }
     return op_code;
 }
@@ -52,6 +65,6 @@ int write_strlen_to_packet(char *packet, int strlen) {
 }
 
 int write_str_to_packet(char *packet, char *str, int strlen) {
-    packet = memcpy(packet, str, strlen + 1);
-    return strlen + 1;
+    packet = memcpy(packet, str, strlen);
+    return strlen;
 }

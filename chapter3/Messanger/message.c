@@ -65,9 +65,9 @@ int get_strlen_with_fd(int fd) {
 
 char* get_str_with_fd(int fd, char *str, int strlen) {
     int n_byte;
-    n_byte = read(fd, str, strlen + 1);
+    n_byte = read(fd, str, strlen);
 
-    if (n_byte < (strlen + 1)) {
+    if (n_byte < (strlen)) {
         printf("Failed to read str\n");
         return NULL;
     }
@@ -90,7 +90,7 @@ int get_strlen_with_msg(Message *message) {
         return -1;
     }
 
-    return (message->strlen + 1);
+    return (message->strlen);
 }
 
 char* get_str_with_msg(Message *message) {
@@ -100,4 +100,17 @@ char* get_str_with_msg(Message *message) {
     }
 
     return message->str;
+}
+
+int write_message_to_file(char *message, int msg_fd, int size) {
+    int n_byte;
+    n_byte = write(msg_fd, (void*) message, size);
+    printf("n_byte:%d\n", n_byte);
+    fsync(msg_fd);
+
+    if (n_byte != size) {
+        printf("Failed to wrtie message to file\n");
+        return -1;
+    }
+    return n_byte;
 }
