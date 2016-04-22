@@ -59,7 +59,6 @@ int get_strlen_with_fd(int fd) {
         printf("Failed to read STR_LENGTH_MEMORY_SIZE\n");
         return -1;
     }
-
     return strlen;
 }
 
@@ -71,7 +70,6 @@ char* get_str_with_fd(int fd, char *str, int strlen) {
         printf("Failed to read str\n");
         return NULL;
     }
-
     return str;
 }
 
@@ -111,5 +109,7 @@ int write_message_to_file(char *message, int msg_fd, int size) {
         printf("Failed to wrtie message to file\n");
         return -1;
     }
+
+    fsync(msg_fd);
     return n_byte;
 }

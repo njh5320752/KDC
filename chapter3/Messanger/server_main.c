@@ -129,10 +129,29 @@ int main(int argc, char *argv[]) {
                         }
                         break;
                     case REQ_LAST_MSG_FR_FS:
-                        server_get_res_last_fr_fs_packet(msg_fd);
+                        packet_size = server_get_res_last_fr_fs_packet(server, client_fd, msg_fd, &packet);
+
+                        if (packet_size == -1) {
+                            printf("Failed to make res_last_fr_fs packet\n");
+                        } else {
+                            n_byte = write(client_fd, packet, packet_size);
+                            if (n_byte != packet_size) {
+                                printf("Failed to send message to client\n");
+                            }
+                            free(packet);
+                        }
                         break;
                     case REQ_LAST_MSG_FR_LS:
-                        server_get_res_last_fr_ls_packet(mgs_fd);
+                        packet_size = server_get_res_last_fr_ls_packet(server, client_fd, msg_fd, &packet);
+                        if (packet_size == -1) {
+                            printf("Failed to make res_last_fr_fs packet\n");
+                        } else {
+                            n_byte = write(client_fd, packet, packet_size);
+                            if (n_byte != packet_size) {
+                                printf("Failed to send message to client\n");
+                            }
+                            free(packet);
+                        }
                         break;
                     default:
                         printf("This op_code:%02x is wrong\n", op_code);
