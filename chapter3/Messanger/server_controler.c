@@ -23,6 +23,85 @@ struct _Server
     DList *client_list;
 };
 
+int add_client_from_server(Server *server, int fd) {
+    int client_fd;
+    int state;
+    client_fd = accept(fd, NULL, NULL);
+    if (client_fd < 0) {
+        printf("Failed to accept socket\n");
+        return -1;
+    }
+    state = server_add_client(server, fd);
+    if (state == -1) {
+        printf("Failed to add client\n");
+        return -1;
+    }
+    return client_fd;
+}
+
+void response_event(int client_fd) {
+    short op_code;
+
+    op_code = get_op_code_with_fd(client_fd);
+    printf("CLIENT FD: %d\n", client_fd);
+
+    switch(op_code) {
+    case REQ_ALL_MSG:
+        packet_size = server_get_res_all_msg_packet(server, &packet);
+        if (packet_size == -1) {
+            printf("Failed to make res_all_msg packet\n");
+        } else {
+            n_byte = write(client_fd, packet, packet_size);
+            if (n_byte != packet_size) {
+                printf("Failed to send all message to client\n");
+            }
+            free(packet);
+        }
+        break;
+    case SND_MSG:
+        packet_size = server_get_rcv_msg_packet_with_fd(server, client_fd, &packet, msg_fd);
+        if (packet_size == -1) {
+            printf("Failed to make rcv_msg_packet\n");
+        } else {
+            result = server_send_message_to_clients(server, client_fd, packet, packet_size);
+            if (!result) {
+                printf("Failed to send message to clients\n");
+            }
+            free(packet);
+        }
+        break;
+    case REQ_LAST_MSG_FR_FS:
+        packet_size = server_get_res_last_fr_fs_packet(server, client_fd, msg_fd, &packet);
+
+        if (packet_size == -1) {
+            printf("Failed to make res_last_fr_fs packet\n");
+        } else {
+            n_byte = write(client_fd, packet, packet_size);
+            if (n_byte != packet_size) {
+                printf("Failed to send message to client\n");
+            }
+            free(packet);
+        }
+        break;
+    case REQ_LAST_MSG_FR_LS:
+        packet_size = server_get_res_last_fr_ls_packet(server, client_fd, msg_fd, &packet);
+        if (packet_size == -1) {
+            printf("Failed to make res_last_fr_fs packet\n");
+        } else {
+            n_byte = write(client_fd, packet, packet_size);
+            if (n_byte != packet_size) {
+                printf("Failed to send message to client\n");
+            }
+            free(packet);
+        }
+        break;
+    default:
+        printf("This op_code:%02x is wrong\n", op_code);
+        break;
+    }
+
+}
+
 static int server_get_packet_size(int msg_fd, int *msg_num, int end_offset) {
     int offset, strlen;
     int total_strlen;
@@ -123,7 +202,7 @@ int  server_add_client(Server *server, int client_fd) {
 
     if (!new_client || !server) {
         printf("Can't add client\n");
-        return 0;
+        return -1;
     }
 
     new_client->fd = client_fd;
@@ -132,7 +211,7 @@ int  server_add_client(Server *server, int client_fd) {
 
     if (!list) {
         printf("Can't add client\n");
-        return 0;
+        return -1;
     }
 
     server->client_list = list;

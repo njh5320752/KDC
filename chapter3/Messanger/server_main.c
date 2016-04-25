@@ -26,6 +26,7 @@ int main(int argc, char *argv[]) {
     int packet_size;
     int result, n_byte;
     int msg_fd;
+    Looper *looper;
 
     msg_fd = open(MESSAGE_PATH, O_RDWR | O_APPEND | O_CREAT, S_IRWXU);
 
@@ -69,6 +70,17 @@ int main(int argc, char *argv[]) {
     poll_set[0].events = POLLIN;
     numfds++;
 
+    looper = looper_new();
+
+    if (!looper) {
+        printf("Can't make looper\n");
+    }
+
+    add_accept_event_call_back(looper, accept_client_from_server);
+    add_remove_client_call_back(looper, server_remove_client);
+    add_response_event_call_back(looper, response_event);
+    run(looper, server, server_fd);
+
     while (1) {
         if (poll(poll_set, numfds, 100000) > 0) {
             if (poll_set[0].revents & POLLIN) {
@@ -88,7 +100,7 @@ int main(int argc, char *argv[]) {
                 numfds++;
                 printf("Adding client on fd %d\n", client_fd);
             }
-            for (fd_index = 1; fd_index < numfds; fd_index++)
+            for (fd_index = 1; fd_index < numfds; fd_index++) {
                 if (poll_set[fd_index].revents & POLLHUP) {
                     tmp_fd = poll_set[fd_index].fd;
                     result = server_remove_client(server, tmp_fd);
@@ -160,6 +172,5 @@ int main(int argc, char *argv[]) {
                 }
         }
     }
-
     return 0;
 }
