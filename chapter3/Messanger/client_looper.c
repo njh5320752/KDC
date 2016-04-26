@@ -117,10 +117,10 @@ void client_looper() {
                     case RCV_MSG:
                         client_receive_message(client_msg, fd);
                         break;
-                    case RES_LAST_MSG_FR_FS:
+                    case RES_FIRST_MSG:
                         client_receive_all_messages(client_msg, fd);
                         break;
-                    case RES_LAST_MSG_FR_LS:
+                    case RES_LAST_MSG:
                         client_receive_all_messages(client_msg, fd);
                         break;
                     default:

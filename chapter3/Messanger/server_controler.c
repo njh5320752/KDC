@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <poll.h>
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <unistd.h>
 #include <errno.h>
 #include "socket.h"
@@ -23,83 +24,38 @@ struct _Server
     DList *client_list;
 };
 
-int add_client_from_server(Server *server, int fd) {
-    int client_fd;
-    int state;
-    client_fd = accept(fd, NULL, NULL);
-    if (client_fd < 0) {
-        printf("Failed to accept socket\n");
+static int  server_add_client(Server *server, int client_fd) {
+    Client *new_client = NULL;
+    DList *list = NULL;
+    new_client = (Client*) malloc(sizeof(Client));
+
+    if (!new_client || !server) {
+        printf("Can't add client\n");
         return -1;
     }
-    state = server_add_client(server, fd);
-    if (state == -1) {
-        printf("Failed to add client\n");
+
+    new_client->fd = client_fd;
+    new_client->msg_offset = 0;
+    list = d_list_append(server->client_list, (void*) new_client);
+
+    if (!list) {
+        printf("Can't add client\n");
         return -1;
     }
-    return client_fd;
+
+    server->client_list = list;
+    return 1;
 }
 
-void response_event(int client_fd) {
-    short op_code;
+static Client* server_find_client(Server *server, void *client_data) {
+    Client *client = NULL;
+    client = (Client*) d_list_find_data(server->client_list, find_client_data, client_data);
 
-    op_code = get_op_code_with_fd(client_fd);
-    printf("CLIENT FD: %d\n", client_fd);
-
-    switch(op_code) {
-    case REQ_ALL_MSG:
-        packet_size = server_get_res_all_msg_packet(server, &packet);
-        if (packet_size == -1) {
-            printf("Failed to make res_all_msg packet\n");
-        } else {
-            n_byte = write(client_fd, packet, packet_size);
-            if (n_byte != packet_size) {
-                printf("Failed to send all message to client\n");
-            }
-            free(packet);
-        }
-        break;
-    case SND_MSG:
-        packet_size = server_get_rcv_msg_packet_with_fd(server, client_fd, &packet, msg_fd);
-        if (packet_size == -1) {
-            printf("Failed to make rcv_msg_packet\n");
-        } else {
-            result = server_send_message_to_clients(server, client_fd, packet, packet_size);
-            if (!result) {
-                printf("Failed to send message to clients\n");
-            }
-            free(packet);
-        }
-        break;
-    case REQ_LAST_MSG_FR_FS:
-        packet_size = server_get_res_last_fr_fs_packet(server, client_fd, msg_fd, &packet);
-
-        if (packet_size == -1) {
-            printf("Failed to make res_last_fr_fs packet\n");
-        } else {
-            n_byte = write(client_fd, packet, packet_size);
-            if (n_byte != packet_size) {
-                printf("Failed to send message to client\n");
-            }
-            free(packet);
-        }
-        break;
-    case REQ_LAST_MSG_FR_LS:
-        packet_size = server_get_res_last_fr_ls_packet(server, client_fd, msg_fd, &packet);
-        if (packet_size == -1) {
-            printf("Failed to make res_last_fr_fs packet\n");
-        } else {
-            n_byte = write(client_fd, packet, packet_size);
-            if (n_byte != packet_size) {
-                printf("Failed to send message to client\n");
-            }
-            free(packet);
-        }
-        break;
-    default:
-        printf("This op_code:%02x is wrong\n", op_code);
-        break;
+    if (client == NULL) {
+        printf("Can't find this data:%d\n", *((int*) client_data));
+        return NULL;
     }
-
+    return client;
 }
 
 static int server_get_packet_size(int msg_fd, int *msg_num, int end_offset) {
@@ -195,75 +151,7 @@ static int server_get_res_last_fr_packet_size_with_msg_file(int msg_fd, int *msg
     return packet_size;
 }
 
-int  server_add_client(Server *server, int client_fd) {
-    Client *new_client = NULL;
-    DList *list = NULL;
-    new_client = (Client*) malloc(sizeof(Client));
-
-    if (!new_client || !server) {
-        printf("Can't add client\n");
-        return -1;
-    }
-
-    new_client->fd = client_fd;
-    new_client->msg_offset = 0;
-    list = d_list_append(server->client_list, (void*) new_client);
-
-    if (!list) {
-        printf("Can't add client\n");
-        return -1;
-    }
-
-    server->client_list = list;
-    return 1;
-}
-
-int server_remove_client(Server *server, int remove_fd) {
-    Client * remove_client;
-
-    if (!server || (remove_fd < 0)) {
-        printf("Can't free client\n");
-        return 0;
-    }
-
-    remove_client = server_find_client(server, &remove_fd);
-    if (!remove_client) {
-        printf("There is no client to remove\n");
-        return 0;
-    }
-
-    server->client_list = d_list_remove_nth_with_data(server->client_list, (void*) remove_client, free_client);
-    return 1;
-}
-
-void free_client(void *client) {
-    Client *remove = (Client*)client;
-    free(remove);
-}
-
-Client* server_find_client(Server *server, void *client_data) {
-    Client *client = NULL;
-    client = (Client*) d_list_find_data(server->client_list, find_client_data, client_data);
-
-    if (client == NULL) {
-        printf("Can't find this data:%d\n", *((int*) client_data));
-        return NULL;
-    }
-    return client;
-}
-
-int find_client_data(void *data, void *client_data) {
-    Client *client = (Client *)data;
-
-    printf("client data:%d\n", client->fd);
-    if (client->fd == *((int*) client_data)) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
-int server_get_res_all_msg_packet(Server *server, char **packet) {
+static int get_packet_to_res_all_msg(Server *server, char **packet) {
     long int time;
     int strlen;
     char *str;
@@ -310,32 +198,7 @@ int server_get_res_all_msg_packet(Server *server, char **packet) {
     return dest;
 }
 
-int server_get_msg_list_size(Server *server) {
-    int msg_len, all_msg_size;
-    int strlen = 0;
-    DList* message_node = server->message_list;
-    Message* msg;
-
-    if (!message_node) {
-        printf("There is no message\n");
-        return -1;
-    }
-
-    msg_len = d_list_length(server->message_list);
-
-    while (message_node) {
-        msg = (Message*) d_list_get_data(message_node);
-        strlen += get_strlen_with_msg(msg);
-        message_node = d_list_next(message_node);
-    }
-
-    all_msg_size = msg_len*(TIME_MEMORY_SIZE + STR_LENGTH_MEMORY_SIZE) + strlen;
-    printf("all_msg_size:%d\n", all_msg_size);
-
-    return all_msg_size;
-}
-
-int server_get_rcv_msg_packet_with_fd(Server *server, int fd, char **packet, int msg_fd) {
+static int get_packet_to_rcv_msg(Server *server, int fd, char **packet, int msg_fd) {
     long int time;
     int strlen;
     char *str;
@@ -363,7 +226,7 @@ int server_get_rcv_msg_packet_with_fd(Server *server, int fd, char **packet, int
     dest += write_time_to_packet((*packet + dest), time);
     dest += write_strlen_to_packet((*packet + dest), strlen);
     dest += write_str_to_packet((*packet + dest), str, strlen);
-    
+
     msg_size = dest - OP_CODE_MEMORY_SIZE;
 
     n_byte = write_message_to_file(*packet + OP_CODE_MEMORY_SIZE, msg_fd, msg_size); 
@@ -377,7 +240,7 @@ int server_get_rcv_msg_packet_with_fd(Server *server, int fd, char **packet, int
     return dest;
 }
 
-int server_send_message_to_clients(Server *server, int client_fd, char *packet, int packet_size) {
+static int send_message_to_clients(Server *server, int client_fd, char *packet, int packet_size) {
     Client *client = NULL;
     DList *client_list;
     int n_byte;
@@ -400,18 +263,14 @@ int server_send_message_to_clients(Server *server, int client_fd, char *packet, 
     return 1;
 }
 
-Server* server_new() {
-    Server *new_server = (Server*) malloc(sizeof(Server));
-    if (!new_server) {
-        printf("Can't make server data\n");
-    }
-    new_server->message_list = NULL;
-    new_server->client_list = NULL;
+/**
+ * get_packet_for_res_last_fr_fs:
+ *
+ * Write ten messages from first file offset of the message file to the packet
+ * Return size of packet;
+ **/
 
-    return new_server;
-}
-
-int server_get_res_last_fr_fs_packet(Server* server, int client_fd, int msg_fd, char **packet) {
+static int get_packet_for_res_last_fr_fs(Server* server, int client_fd, int msg_fd, char **packet) {
     int packet_size;
     int msg_num;
     int dest;
@@ -444,7 +303,7 @@ int server_get_res_last_fr_fs_packet(Server* server, int client_fd, int msg_fd, 
 
     offset = lseek(msg_fd, 0, SEEK_SET);
     printf("seek_set off_set:%d\n", offset);
-    dest = write_op_code_to_packet(*packet, RES_LAST_MSG_FR_FS);
+    dest = write_op_code_to_packet(*packet, RES_FIRST_MSG);
     dest += write_msg_num_to_packet((*packet + dest), msg_num);
 
     for (i = 0; i < msg_num; i++) {
@@ -468,6 +327,163 @@ int server_get_res_last_fr_fs_packet(Server* server, int client_fd, int msg_fd, 
  
     return packet_size;
 }
+
+int server_handle_accept_event(Server *server, int fd) {
+    int client_fd;
+    int state;
+
+    client_fd = accept(fd, NULL, NULL);
+    if (client_fd < 0) {
+        printf("Failed to accept socket\n");
+        return -1;
+    }
+    state = server_add_client(server, client_fd);
+    if (state == -1) {
+        printf("Failed to add client\n");
+        return -1;
+    }
+    return client_fd;
+}
+
+void server_handle_event(Server *server, int client_fd, int msg_fd) {
+    short op_code;
+    int packet_size;
+    char *packet;
+    int result;
+    int n_byte;
+
+    op_code = get_op_code_with_fd(client_fd);
+    printf("CLIENT FD: %d\n", client_fd);
+
+    switch (op_code) {
+    case REQ_ALL_MSG:
+        packet_size = get_packet_to_res_all_msg(server, &packet);
+        if (packet_size == -1) {
+            printf("Failed to make res_all_msg packet\n");
+        } else {
+            n_byte = write(client_fd, packet, packet_size);
+            if (n_byte != packet_size) {
+                printf("Failed to send all message to client\n");
+            }
+            free(packet);
+        }
+        break;
+    case SND_MSG:
+        packet_size = get_packet_to_rcv_msg(server, client_fd, &packet, msg_fd);
+        if (packet_size == -1) {
+            printf("Failed to make rcv_msg_packet\n");
+        } else {
+            result = send_message_to_clients(server, client_fd, packet, packet_size);
+            if (!result) {
+                printf("Failed to send message to clients\n");
+            }
+            free(packet);
+        }
+        break;
+    case REQ_FIRST_MSG:
+        packet_size = get_packet_for_res_last_fr_fs(server, client_fd, msg_fd, &packet);
+
+        if (packet_size == -1) {
+            printf("Failed to make res_last_fr_fs packet\n");
+        } else {
+            n_byte = write(client_fd, packet, packet_size);
+            if (n_byte != packet_size) {
+                printf("Failed to send message to client\n");
+            }
+            free(packet);
+        }
+        break;
+    case REQ_LAST_MSG:
+        packet_size = server_get_res_last_fr_ls_packet(server, client_fd, msg_fd, &packet);
+        if (packet_size == -1) {
+            printf("Failed to make res_last_fr_fs packet\n");
+        } else {
+            n_byte = write(client_fd, packet, packet_size);
+            if (n_byte != packet_size) {
+                printf("Failed to send message to client\n");
+            }
+            free(packet);
+        }
+        break;
+    default:
+        printf("This op_code:%02x is wrong\n", op_code);
+        break;
+    }
+
+}
+
+int server_remove_client(Server *server, int remove_fd) {
+    Client * remove_client;
+
+    if (!server || (remove_fd < 0)) {
+        printf("Can't free client\n");
+        return -1;
+    }
+
+    remove_client = server_find_client(server, &remove_fd);
+    if (!remove_client) {
+        printf("There is no client to remove\n");
+        return -1;
+    }
+
+    server->client_list = d_list_remove_nth_with_data(server->client_list, (void*) remove_client, free_client);
+    return 1;
+}
+
+void free_client(void *client) {
+    Client *remove = (Client*)client;
+    free(remove);
+}
+
+int find_client_data(void *data, void *client_data) {
+    Client *client = (Client *)data;
+
+    printf("client data:%d\n", client->fd);
+    if (client->fd == *((int*) client_data)) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+int server_get_msg_list_size(Server *server) {
+    int msg_len, all_msg_size;
+    int strlen = 0;
+    DList* message_node = server->message_list;
+    Message* msg;
+
+    if (!message_node) {
+        printf("There is no message\n");
+        return -1;
+    }
+
+    msg_len = d_list_length(server->message_list);
+
+    while (message_node) {
+        msg = (Message*) d_list_get_data(message_node);
+        strlen += get_strlen_with_msg(msg);
+        message_node = d_list_next(message_node);
+    }
+
+    all_msg_size = msg_len*(TIME_MEMORY_SIZE + STR_LENGTH_MEMORY_SIZE) + strlen;
+    printf("all_msg_size:%d\n", all_msg_size);
+
+    return all_msg_size;
+}
+
+Server* server_new() {
+    Server *new_server = (Server*) malloc(sizeof(Server));
+    if (!new_server) {
+        printf("Can't make server data\n");
+        return NULL;
+    }
+    new_server->message_list = NULL;
+    new_server->client_list = NULL;
+
+    return new_server;
+}
+
+
 
 int server_get_res_last_fr_ls_packet(Server *server, int client_fd, int msg_fd, char **packet) {
     int packet_size;
@@ -502,7 +518,7 @@ int server_get_res_last_fr_ls_packet(Server *server, int client_fd, int msg_fd, 
 
     offset = lseek(msg_fd, client->msg_offset, SEEK_SET);
     printf("seek_set off_set:%d\n", offset);
-    dest = write_op_code_to_packet(*packet, RES_LAST_MSG_FR_FS);
+    dest = write_op_code_to_packet(*packet, RES_LAST_MSG);
     dest += write_msg_num_to_packet((*packet + dest), msg_num);
 
     for (i = 0; i < msg_num; i++) {

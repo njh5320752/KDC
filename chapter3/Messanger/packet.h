@@ -10,10 +10,10 @@
 #define RES_ALL_MSG             0x02
 #define SND_MSG                 0x03
 #define RCV_MSG                 0x04
-#define REQ_LAST_MSG_FR_FS      0x05
-#define RES_LAST_MSG_FR_FS      0x06
-#define REQ_LAST_MSG_FR_LS      0x07
-#define RES_LAST_MSG_FR_LS      0x08
+#define REQ_FIRST_MSG           0x05
+#define RES_FIRST_MSG           0x06
+#define REQ_LAST_MSG            0x07
+#define RES_LAST_MSG            0x08
 
 void print_data(void *buf, int size);
 void print_packet(char *buf, int size);

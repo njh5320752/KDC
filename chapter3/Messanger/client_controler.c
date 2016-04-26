@@ -169,7 +169,7 @@ int client_request_last_message_from_first_loaction(int fd) {
     int n_byte;
     short op_code;
 
-    op_code = REQ_LAST_MSG_FR_FS;
+    op_code = REQ_FIRST_MSG;
 
     n_byte = write(fd, &op_code, OP_CODE_MEMORY_SIZE);
 
@@ -184,7 +184,7 @@ int client_request_last_message_from_last_location(int fd) {
     int n_byte;
     short op_code;
 
-    op_code = REQ_LAST_MSG_FR_LS;
+    op_code = REQ_LAST_MSG;
 
     n_byte = write(fd, &op_code, OP_CODE_MEMORY_SIZE);
 

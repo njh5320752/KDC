@@ -19,7 +19,7 @@ PACKET_OBJECT = packet.o
 SERVER_MAIN_OBJECT = \
 			server_controler.o\
 			packet.o\
-			fd_controler.o\
+			server_looper.o\
 			server_main.o\
 			message.o\
 
