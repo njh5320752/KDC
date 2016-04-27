@@ -11,6 +11,5 @@ void free_client(void *client);
 int find_client_data(void *data, void *client_data);
 int server_get_msg_list_size(Server *server);
 Server* server_new();
-int server_get_res_last_fr_ls_packet(Server *server, int client_fd, int msg_fd, char **packet);
 
 #endif

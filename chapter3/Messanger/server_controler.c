@@ -58,7 +58,7 @@ static Client* server_find_client(Server *server, void *client_data) {
     return client;
 }
 
-static int server_get_packet_size(int msg_fd, int *msg_num, int end_offset) {
+static int get_packet_size(int msg_fd, int *msg_num, int end_offset) {
     int offset, strlen;
     int total_strlen;
     int num;
@@ -73,7 +73,7 @@ static int server_get_packet_size(int msg_fd, int *msg_num, int end_offset) {
     }
     printf("get packet seek_cur offset:%d\n", offset);
     strlen = get_strlen_with_fd(msg_fd);
-    
+
     if (strlen == -1) {
         return -1;
     }
@@ -95,7 +95,7 @@ static int server_get_packet_size(int msg_fd, int *msg_num, int end_offset) {
         total_strlen += strlen;
         num++;
     }
-    
+
     printf("num:%d total_strlen:%d\n", num, total_strlen);
     packet_size = total_strlen + (num * (TIME_MEMORY_SIZE + STR_LENGTH_MEMORY_SIZE));
     printf("insert num\n");
@@ -105,7 +105,7 @@ static int server_get_packet_size(int msg_fd, int *msg_num, int end_offset) {
     return packet_size;
 }
 
-static int server_get_res_last_fr_ls_packet_size_with_msg_file(int msg_fd, int *msg_num, Client *client) {
+static int get_packet_size_for_res_last_msg(int msg_fd, int *msg_num, Client *client) {
     int end_offset;
     int set_offset;
     int packet_size;
@@ -117,20 +117,20 @@ static int server_get_res_last_fr_ls_packet_size_with_msg_file(int msg_fd, int *
         printf("There is no message\n");
         return 0;
     }
-    
+
     set_offset = lseek(msg_fd, client->msg_offset, SEEK_SET);
     printf("seek_set offset:%d\n", set_offset);
 
-    packet_size = server_get_packet_size(msg_fd, msg_num, end_offset);
+    packet_size = get_packet_size(msg_fd, msg_num, end_offset);
     printf("after seek packet_size:%d\n", packet_size);
     return packet_size;
 }
 
-static int server_get_res_last_fr_packet_size_with_msg_file(int msg_fd, int *msg_num) {
+static int get_packet_size_for_res_first_msg(int msg_fd, int *msg_num) {
     int end_offset;
     int set_offset;
     int packet_size;
-    
+
     if (msg_fd < 0) {
         printf("Can't read messge from file\n ");
         return -1;
@@ -143,15 +143,15 @@ static int server_get_res_last_fr_packet_size_with_msg_file(int msg_fd, int *msg
         printf("There is no message\n");
         return 0;
     }
-    
+
     set_offset = lseek(msg_fd, 0, SEEK_SET);
     printf("seek_set offset:%d\n", set_offset);
 
-    packet_size = server_get_packet_size(msg_fd, msg_num, end_offset);
+    packet_size = get_packet_size(msg_fd, msg_num, end_offset);
     return packet_size;
 }
 
-static int get_packet_to_res_all_msg(Server *server, char **packet) {
+static int get_packet_for_res_all_msg(Server *server, char **packet) {
     long int time;
     int strlen;
     char *str;
@@ -198,7 +198,7 @@ static int get_packet_to_res_all_msg(Server *server, char **packet) {
     return dest;
 }
 
-static int get_packet_to_rcv_msg(Server *server, int fd, char **packet, int msg_fd) {
+static int get_packet_for_rcv_msg(Server *server, int fd, char **packet, int msg_fd) {
     long int time;
     int strlen;
     char *str;
@@ -264,13 +264,13 @@ static int send_message_to_clients(Server *server, int client_fd, char *packet, 
 }
 
 /**
- * get_packet_for_res_last_fr_fs:
+ * get_packet_for_res_first_msg:
  *
  * Write ten messages from first file offset of the message file to the packet
  * Return size of packet;
  **/
 
-static int get_packet_for_res_last_fr_fs(Server* server, int client_fd, int msg_fd, char **packet) {
+static int get_packet_for_res_first_msg(Server* server, int client_fd, int msg_fd, char **packet) {
     int packet_size;
     int msg_num;
     int dest;
@@ -287,15 +287,15 @@ static int get_packet_for_res_last_fr_fs(Server* server, int client_fd, int msg_
         printf("Can't find client\n");
     }
 
-    packet_size = server_get_res_last_fr_packet_size_with_msg_file(msg_fd, &msg_num);    
-    printf("packet_size:%d msg_num:%d\n", packet_size, msg_num); 
+    packet_size = get_packet_size_for_res_first_msg(msg_fd, &msg_num);
+    printf("packet_size:%d msg_num:%d\n", packet_size, msg_num);
 
     if (!packet_size | !msg_num) {
         return -1;
     }
 
     packet_size += OP_CODE_MEMORY_SIZE + MSG_NUM_MEMORY_SIZE;
-    
+
     *packet = make_packet_space(packet_size);
     if (!packet) {
         return -1;
@@ -324,7 +324,72 @@ static int get_packet_for_res_last_fr_fs(Server* server, int client_fd, int msg_
     offset = lseek(msg_fd, 0, SEEK_CUR);
     client->msg_offset = offset;
     printf("seek_cur offset:%d\n", offset);
- 
+
+    return packet_size;
+}
+
+/**
+ * get_packet_for_res_last_msg:
+ *
+ * Write ten messages from last file offset of the message file to the packet
+ * Return size of packet;
+ **/
+
+static int get_packet_for_res_last_msg(Server *server, int client_fd, int msg_fd, char **packet) {
+    int packet_size;
+    int msg_num;
+    int dest;
+    long int time;
+    int strlen;
+    int i;
+    int offset;
+    Client *client = NULL;
+
+    msg_num = 0;
+
+    client = server_find_client(server, &client_fd);
+    if (!client) {
+        printf("Can't find client\n");
+    }
+
+    packet_size = get_packet_size_for_res_last_msg(msg_fd, &msg_num, client);
+    printf("packet_size:%d msg_num:%d\n", packet_size, msg_num);
+
+    if (!packet_size | !msg_num) {
+        return -1;
+    }
+
+    packet_size += OP_CODE_MEMORY_SIZE + MSG_NUM_MEMORY_SIZE;
+
+    *packet = make_packet_space(packet_size);
+    if (!packet) {
+        return -1;
+    }
+
+    offset = lseek(msg_fd, client->msg_offset, SEEK_SET);
+    printf("seek_set off_set:%d\n", offset);
+    dest = write_op_code_to_packet(*packet, RES_LAST_MSG);
+    dest += write_msg_num_to_packet((*packet + dest), msg_num);
+
+    for (i = 0; i < msg_num; i++) {
+        time = get_time_with_fd(msg_fd);
+        if (time == -1) {
+            return -1;
+            }
+        dest += write_time_to_packet((*packet + dest), time);
+        strlen = get_strlen_with_fd(msg_fd);
+        if (strlen == -1) {
+            return -1;
+        }
+        dest += write_strlen_to_packet((*packet + dest), strlen);
+        get_str_with_fd(msg_fd, (*packet + dest), strlen);
+        dest += strlen;
+    }
+    print_packet(*packet, dest);
+    offset = lseek(msg_fd, 0, SEEK_CUR);
+    client->msg_offset = offset;
+    printf("seek_cur offset:%d\n", offset);
+
     return packet_size;
 }
 
@@ -357,7 +422,7 @@ void server_handle_event(Server *server, int client_fd, int msg_fd) {
 
     switch (op_code) {
     case REQ_ALL_MSG:
-        packet_size = get_packet_to_res_all_msg(server, &packet);
+        packet_size = get_packet_for_res_all_msg(server, &packet);
         if (packet_size == -1) {
             printf("Failed to make res_all_msg packet\n");
         } else {
@@ -369,7 +434,7 @@ void server_handle_event(Server *server, int client_fd, int msg_fd) {
         }
         break;
     case SND_MSG:
-        packet_size = get_packet_to_rcv_msg(server, client_fd, &packet, msg_fd);
+        packet_size = get_packet_for_rcv_msg(server, client_fd, &packet, msg_fd);
         if (packet_size == -1) {
             printf("Failed to make rcv_msg_packet\n");
         } else {
@@ -381,8 +446,7 @@ void server_handle_event(Server *server, int client_fd, int msg_fd) {
         }
         break;
     case REQ_FIRST_MSG:
-        packet_size = get_packet_for_res_last_fr_fs(server, client_fd, msg_fd, &packet);
-
+        packet_size = get_packet_for_res_first_msg(server, client_fd, msg_fd, &packet);
         if (packet_size == -1) {
             printf("Failed to make res_last_fr_fs packet\n");
         } else {
@@ -394,7 +458,7 @@ void server_handle_event(Server *server, int client_fd, int msg_fd) {
         }
         break;
     case REQ_LAST_MSG:
-        packet_size = server_get_res_last_fr_ls_packet(server, client_fd, msg_fd, &packet);
+        packet_size = get_packet_for_res_last_msg(server, client_fd, msg_fd, &packet);
         if (packet_size == -1) {
             printf("Failed to make res_last_fr_fs packet\n");
         } else {
@@ -409,7 +473,6 @@ void server_handle_event(Server *server, int client_fd, int msg_fd) {
         printf("This op_code:%02x is wrong\n", op_code);
         break;
     }
-
 }
 
 int server_remove_client(Server *server, int remove_fd) {
@@ -481,64 +544,4 @@ Server* server_new() {
     new_server->client_list = NULL;
 
     return new_server;
-}
-
-
-
-int server_get_res_last_fr_ls_packet(Server *server, int client_fd, int msg_fd, char **packet) {
-    int packet_size;
-    int msg_num;
-    int dest;
-    long int time;
-    int strlen;
-    int i;
-    int offset;
-    Client *client = NULL;
-
-    msg_num = 0;
-
-    client = server_find_client(server, &client_fd);
-    if (!client) {
-        printf("Can't find client\n");
-    }
-
-    packet_size = server_get_res_last_fr_ls_packet_size_with_msg_file(msg_fd, &msg_num, client);    
-    printf("packet_size:%d msg_num:%d\n", packet_size, msg_num); 
-
-    if (!packet_size | !msg_num) {
-        return -1;
-    }
-
-    packet_size += OP_CODE_MEMORY_SIZE + MSG_NUM_MEMORY_SIZE;
-    
-    *packet = make_packet_space(packet_size);
-    if (!packet) {
-        return -1;
-    }
-
-    offset = lseek(msg_fd, client->msg_offset, SEEK_SET);
-    printf("seek_set off_set:%d\n", offset);
-    dest = write_op_code_to_packet(*packet, RES_LAST_MSG);
-    dest += write_msg_num_to_packet((*packet + dest), msg_num);
-
-    for (i = 0; i < msg_num; i++) {
-        time = get_time_with_fd(msg_fd);
-        if (time == -1) {
-            return -1;
-            }
-        dest += write_time_to_packet((*packet + dest), time);
-        strlen = get_strlen_with_fd(msg_fd);
-        if (strlen == -1) {
-            return -1;
-        }
-        dest += write_strlen_to_packet((*packet + dest), strlen);
-        get_str_with_fd(msg_fd, (*packet + dest), strlen);
-        dest += strlen;
-    }
-    print_packet(*packet, dest);
-    offset = lseek(msg_fd, 0, SEEK_CUR);
-    client->msg_offset = offset;
-    printf("seek_cur offset:%d\n", offset);
- 
-    return packet_size;
 }
