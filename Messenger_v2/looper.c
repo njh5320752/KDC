@@ -1,3 +1,5 @@
+#include "looper.h"
+
 struct _Looper
 {
     DList *wathcer_list;

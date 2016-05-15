@@ -1,24 +1,35 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+
+#include "server.h"
+#include "looper.h"
+#include "DBLinkedList.h"
+#include "file_db.h"
+
 struct _Server {
     int fd;
     DList *client_list;
     Looper *looper;
     int file_fd;
     File_DB *file_db;
-}
+};
 
 struct _Client {
     int fd;
     int file_offset;
     int read_state;
+};
+
+static void destroy_client(void *client) {
+    free((Client*) client);
 }
 
-static void free_client(Client *client) {
-    free(client);
-}
+static int match_client(void *client, void *fd) {
 
-static int match_client(Client *client, int *fd) {
-    printf("client data:%d\n", client->fd);
-    if (client->fd == *(fd)) {
+    printf("client data:%d\n", ((Client*) client)->fd);
+    if (((Client*) client)->fd == *((int*) fd)) {
         return 1;
     } else {
         return 0;
@@ -30,7 +41,7 @@ static Client* find_client(Server *server, int fd) {
     client = (Client*) d_list_find_data(server->client_list, match_client, &fd);
 
     if (client == NULL) {
-        printf("Can't find this data:%d\n", *((int*) client_data));
+        printf("Can't find Client\n");
         return NULL;
     }
     return client;
@@ -66,7 +77,7 @@ static void remove_client(Server *server, int fd) {
         printf("There is no client to remove\n");
     }
 
-    server->client_list = d_list_remove_nth_with_data(list, remove_client, free_client);
+    server->client_list = d_list_remove_nth_with_data(list, remove_client, destroy_client);
 }
 
 static void handle_accept_event(Server *server) {
@@ -83,25 +94,35 @@ static void handle_accept_event(Server *server) {
     return;
 }
 
-static void handle_disconnect_event(Server *server int fd) {
-
-    if (remove_fd < 0) {
-        printf("Can't free client\n");
-        return;
-    }
-
+static void handle_disconnect_event(Server *server, int fd) {
     if (fd == server->fd) {
-        set_looper_state(server->looper, -1);
+        set_state(server->looper, -1);
     } else {
         remove_client(server, fd);
     }
 }
 
-static void handle_req_event(Server *server, int fd) {
+static void read_packet(int fd) {
+    char buf[MAX_BUF];
+    int n_byte;
 
+    while (n_byte = read(fd, buf, MAX_BUF)) {
+       if (n_byte == 0) {
+           printf("Finished read packet\n");
+       }
+    }
+}
+
+static void handle_req_event(Server *server, int fd) {
+    read_packet(fd);
 }
 
 static void handle_events(Server *server, int fd, int revents) {
+    if (!server && (fd < 0)) {
+        printf("Can't handle events\n");
+        return;
+    }
+
     if (revents == POLLHUP) {
          handle_disconnect_event(server, fd);
     } else if (revents == POLLIN) {
@@ -173,7 +194,7 @@ Server* new_server(Looper *looper) {
     return server;
 }
 
-void remove_server(Server *server) {
+void destroy_server(Server *server) {
     DList *list;
 
     if (!server) {
@@ -184,8 +205,8 @@ void remove_server(Server *server) {
     list = server->client_list;
     d_list_free(list, free_client);
 
-    remove_Looper(server->looper);
-    remove_File_DB(server->file_db);
+    destroy_Looper(server->looper);
+    destroy_File_DB(server->file_db);
 
     free(server);
 }
