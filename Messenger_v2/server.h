@@ -3,6 +3,8 @@
 
 #include "looper.h"
 
+#define MAX_BUF_LEN 100
+
 typedef struct _Server Server;
 typedef struct _Client Client;
 

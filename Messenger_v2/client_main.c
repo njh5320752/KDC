@@ -1,13 +1,13 @@
 #include "looper.h"
-#include "server.h"
+#include "client.h"
 
 int main() {
     Looper *looper;
-    Server *server;
+    Client *client;
     int state;
 
     looper = new_looper();
-    server = new_server(looper);
+    client = new_client(looper);
 
     state = run(looper);
 

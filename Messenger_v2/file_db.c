@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <stdio.h>
+
 #include "file_db.h"
 
 struct _File_DB 
@@ -16,4 +19,13 @@ File_DB* new_File_DB() {
     }
     
     return file_db;
+}
+
+void destroy_File_DB(File_DB *file_db) {
+    if (!file_db) {
+        printf("There is no a pointer to file_db\n");
+        return;
+    }
+
+    free(file_db);
 }
