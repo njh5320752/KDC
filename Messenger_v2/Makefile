@@ -15,14 +15,14 @@ DBLINKED_LIST_OBJECT = DBLinkedList.o
 SERVER_MAIN_OBJECT = \
 		     server_main.o\
 		     server.o\
-		     file_db.o\
+			 mesg_file.o\
+		     mesg_file_db.o\
 		     looper.o\
 
 CLIENT_MAIN_OBJECT = \
 		     client_main.o\
 		     client.o\
 		     looper.o\
-
 
 SHARED_LIBRARY = lib$(DBLINKED_LIST).so
 

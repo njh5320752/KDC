@@ -4,26 +4,23 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <poll.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/un.h>
-#include <fcntl.h>
 #include <string.h>
 #include <sys/types.h>
-#include <pwd.h>
 
 #include "server.h"
 #include "looper.h"
 #include "DBLinkedList.h"
-#include "file_db.h"
+#include "mesg_file_db.h"
+#include "mesg_file.h"
 #include "socket.h"
 
 struct _Server {
     int fd;
     DList *client_list;
     Looper *looper;
-    int file_fd;
-    File_DB *file_db;
+    Mesg_File *mesg_file;
+    Mesg_File_DB *mesg_file_db;
 };
 
 struct _Client {
@@ -149,31 +146,9 @@ static void handle_events(int fd, void *user_data, int revents) {
 Server* new_server(Looper *looper) {
     Server *server;
     struct sockaddr_un addr;
-    int mesg_store_fd;
     int server_fd;
-    char *homedir;
-    char *message_path;
-    int home_path_len;
-    int message_str_len;
-    int message_path_len;
-
-    homedir = getenv("HOME");
-
-    printf("homedir: %s\n", homedir);
-
-    home_path_len = strlen(homedir);
-    message_str_len = strlen(MESSAGE_STORE);
-
-    message_path_len = home_path_len + message_str_len;
-
-    message_path = (char*) malloc(message_path_len + 1);
-    memset(message_path, 0, message_path_len + 1);
-
-    strncpy(message_path, homedir, home_path_len);
-    strncpy(message_path + home_path_len, MESSAGE_STORE, message_path_len);
-
-    printf("len: %d\n", message_path_len);
-    printf("message_path:%s\n", message_path);
+    Mesg_File *mesg_file;
+    Mesg_File_DB *mesg_file_db;
 
     if (!looper) {
         printf("Looper is empty\n");
@@ -184,13 +159,6 @@ Server* new_server(Looper *looper) {
 
     if (!server) {
         printf("Failed to make Server\n");
-        return NULL;
-    }
-
-    mesg_store_fd = open(message_path, O_RDWR | O_APPEND | O_CREAT, S_IRUSR | S_IWUSR);
-
-    if (mesg_store_fd == -1) {
-        printf("Failed to make message store\n");
         return NULL;
     }
 
@@ -216,11 +184,19 @@ Server* new_server(Looper *looper) {
         exit(-1);
     }
 
+    mesg_file = new_mesg_file();
+    mesg_file_db = new_mesg_file_db();
+
+    if (!mesg_file && !mesg_file_db) {
+        printf("There is no a pointer to Mesg_File or Mesg_File_DB\n");
+        return NULL;
+    }
+
     server->looper = looper;
     server->fd = server_fd;
     server->client_list = NULL;
-    server->file_fd = 0;
-    server->file_db  = NULL;
+    server->mesg_file = mesg_file;
+    server->mesg_file_db = mesg_file_db;
 
     set_state(server->looper, 1);
 
@@ -240,8 +216,8 @@ void destroy_server(Server *server) {
     list = server->client_list;
     d_list_free(list, destroy_client);
 
-    destroy_Looper(server->looper);
-    destroy_File_DB(server->file_db);
+    destroy_looper(server->looper);
+    destroy_mesg_file_db(server->mesg_file_db);
 
     free(server);
 }

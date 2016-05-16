@@ -191,7 +191,7 @@ void set_state(Looper *looper, int state) {
     looper->state = state;
 }
 
-void destroy_Looper(Looper *looper) {
+void destroy_looper(Looper *looper) {
     DList *list;
 
     if (!looper) {
