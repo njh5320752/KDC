@@ -82,6 +82,7 @@ static void handle_stdin_event(Client* client, int fd) {
     int n_byte;
     int input_size;
     char *input_str;
+    int test;
 
     buf = (char*) malloc(BUF_SIZE);
     if (!buf) {
@@ -89,6 +90,7 @@ static void handle_stdin_event(Client* client, int fd) {
         return;
     }
     memset(buf, 0, BUF_SIZE);
+    client->buffer_list = NULL;
 
     while ((n_byte = read(fd, buf, BUF_SIZE - 1))) {
         client->buffer_list = d_list_append(client->buffer_list, buf);
@@ -115,7 +117,14 @@ static void handle_stdin_event(Client* client, int fd) {
 
     memset(input_str, 0, input_size);
     copy_buffer_list_data(client, input_str);
-    printf("input_str:%s\n", input_str);
+    printf("input_str:%s", input_str);
+    test = strncasecmp(input_str, REQUEST, sizeof(REQUEST));
+
+    printf("test:%d\n", test);
+
+    if (input_size >= REQUEST_MIN_LEN && (strncasecmp(input_str, REQUEST, sizeof(REQUEST))) == 0) {
+        printf("input_str:%s", input_str);
+    }
 }
 
 static void handle_events(int fd, void *user_data, int revents) {
@@ -126,9 +135,9 @@ static void handle_events(int fd, void *user_data, int revents) {
         return;
     }
 
-    if (revents == POLLHUP) {
+    if (revents & POLLHUP) {
         handle_disconnect(client, fd);
-    } else if (revents == POLLIN) {
+    } else if (revents & POLLIN) {
         if (fd == client->fd) {
             handle_res_events(client, fd);
         } else if (fd == STDIN_FILENO) {
