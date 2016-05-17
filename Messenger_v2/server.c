@@ -35,8 +35,8 @@ static void destroy_client(void *client) {
 
 static int match_client(void *client, void *fd) {
 
-    printf("client data:%d\n", ((Client*) client)->fd);
     if (((Client*) client)->fd == *((int*) fd)) {
+        printf("matched client data:%d\n", ((Client*) client)->fd);
         return 1;
     } else {
         return 0;
@@ -87,18 +87,15 @@ static void remove_client(Server *server, int fd) {
     server->client_list = d_list_remove_nth_with_data(list, remove_client, destroy_client);
 }
 
-static void handle_accept_event(Server *server) {
-    int client_fd;
-    int state;
+static void read_packet(int fd) {
+    char buf[MAX_BUF_LEN];
+    int n_byte;
 
-    client_fd = accept(server->fd, NULL, NULL);
-    if (client_fd < 0) {
-        printf("Failed to accept socket\n");
-        return;
+    while ((n_byte = read(fd, buf, MAX_BUF_LEN))) {
+       if (n_byte == 0) {
+           printf("Finished read packet\n");
+       }
     }
-
-    add_client(server, client_fd);
-    return;
 }
 
 static void handle_disconnect_event(Server *server, int fd) {
@@ -107,36 +104,47 @@ static void handle_disconnect_event(Server *server, int fd) {
     } else {
         remove_client(server, fd);
     }
-}
-
-static void read_packet(int fd) {
-    char buf[MAX_BUF_LEN];
-    int n_byte;
-
-    while (n_byte = read(fd, buf, MAX_BUF_LEN)) {
-       if (n_byte == 0) {
-           printf("Finished read packet\n");
-       }
-    }
+    printf("disconnected client:%d\n", fd);
+    remove_watcher(server->looper, fd);
 }
 
 static void handle_req_event(Server *server, int fd) {
     read_packet(fd);
 }
 
+static int handle_accept_event(Server *server) {
+    int client_fd;
+    int state;
+
+    client_fd = accept(server->fd, NULL, NULL);
+    if (client_fd < 0) {
+        printf("Failed to accept socket\n");
+        return -1;
+    }
+    printf("connected client:%d\n", client_fd);
+
+    add_client(server, client_fd);
+    return client_fd;
+}
+
 static void handle_events(int fd, void *user_data, int revents) {
-    Server *server = (Server*) user_data;
+    int client_fd;
+    Server *server;
+    server = (Server*) user_data;
 
     if (!server && (fd < 0)) {
         printf("Can't handle events\n");
         return;
     }
 
-    if (revents == POLLHUP) {
+    if (revents & POLLHUP) {
          handle_disconnect_event(server, fd);
-    } else if (revents == POLLIN) {
+    } else if (revents & POLLIN) {
         if (fd == server->fd) {
-            handle_accept_event(server);
+            client_fd = handle_accept_event(server);
+            if (client_fd != -1) {
+                add_watcher(server->looper, client_fd, handle_events, server, POLLIN);
+            }
         } else {
             handle_req_event(server, fd);
         }
@@ -198,9 +206,9 @@ Server* new_server(Looper *looper) {
     server->mesg_file = mesg_file;
     server->mesg_file_db = mesg_file_db;
 
-    set_state(server->looper, 1);
-
     add_watcher(server->looper, server_fd, handle_events, server, POLLIN);
+
+    set_state(server->looper, 1);
 
     return server;
 }

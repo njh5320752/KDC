@@ -22,7 +22,6 @@ Mesg_File* new_mesg_file() {
     int file_fd;
 
     homedir = getenv("HOME");
-    printf("homedir: %s\n", homedir);
 
     home_path_len = strlen(homedir);
     message_str_len = strlen(MESSAGE_STORE);
@@ -35,7 +34,6 @@ Mesg_File* new_mesg_file() {
     strncpy(message_path, homedir, home_path_len);
     strncpy(message_path + home_path_len, MESSAGE_STORE, message_path_len);
 
-    printf("len: %d\n", message_path_len);
     printf("message_path:%s\n", message_path);
 
     file_fd = open(message_path, O_RDWR | O_APPEND | O_CREAT, S_IRUSR | S_IWUSR);

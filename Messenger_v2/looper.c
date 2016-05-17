@@ -27,8 +27,7 @@ struct _Watcher
   * Set events vaule of pollfd 
   **/
 static void set_fd_event(Looper *looper, struct pollfd *fds) {
-    DList *list;
-    DList *next;
+    DList *list, *next;
     Watcher *watcher;
     int index;
 
@@ -37,8 +36,8 @@ static void set_fd_event(Looper *looper, struct pollfd *fds) {
 
     while (list) {
         next = d_list_next(list);
-        watcher = d_list_get_data(list);
-        
+        watcher = (Watcher*) d_list_get_data(list);
+
         if (!watcher) {
             printf("There is no a pointer to watcher\n");
             break;
@@ -93,7 +92,7 @@ Looper* new_looper() {
 /**
   * run:
   * @looper: Looper is struct which includes wathcer_list and state
-  * 
+  *
   * Run stops when state of looper is 0
   **/
 int run(Looper *looper) {
@@ -119,7 +118,7 @@ int run(Looper *looper) {
     while (looper->state) {
         n_watcher = d_list_length(list);
         if (!n_watcher) {
-            printf("There is no watcher\n");
+            printf("There is no Watcher\n");
             return 0;
         }
 
@@ -127,10 +126,9 @@ int run(Looper *looper) {
         set_fd_event(looper, fds);
 
         nfds = poll(fds, n_watcher, 10000);
-        printf("number of pollfd which has nonzero revents:%d\n", nfds);
-        
+
         if (nfds > 0) {
-            for (i = 0; i < nfds; i++) {
+            for (i = 0; i < n_watcher; i++) {
                 if (fds[i].revents != 0) {
                     printf("pollfd index:%d revent:%d\n", i, fds[i].revents);
                     fd = fds[i].fd;
@@ -138,12 +136,17 @@ int run(Looper *looper) {
                     break;
                 }
             }
+            watcher = find_watcher(looper, fd);
+            if (!watcher) {
+                printf("There is no a pointer to Watcher\n");
+                return 0;
+            }
+
+            watcher->handle_events(fd, watcher->user_data, revents);
         }
 
-        watcher = find_watcher(looper, fd);
-        watcher->handle_events(fd, watcher->user_data, revents);
+        free(fds);
     }
-
     printf("Looper state:%d\n", state);
     return state;
 }
@@ -171,12 +174,17 @@ void add_watcher(Looper* looper, int fd, void (*handle_events)(int fd, void *use
 void remove_watcher(Looper *looper, int fd) {
     Watcher *watcher;
     DList *list;
-    
+
+    if (!looper) {
+        printf("There is no a pointer to Looper\n");
+        return;
+    }
+
     list = looper->watcher_list;
     watcher = find_watcher(looper, fd);
 
     if (!watcher) {
-        printf("There is no pointer to Watcher");
+        printf("There is no a pointer to Watcher");
         return;
     }
 
