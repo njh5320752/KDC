@@ -340,9 +340,9 @@ DList* d_list_prepend_node(DList* sorted_node, DList* insert_node, DList* list) 
     return list;
 }
 
-void* d_list_find_data(DList *list, int(*find_data)(void *data, void *client_data), void *client_data) {
+void* d_list_find_data(DList *list, int(*find_data)(void *data, void *user_data), void *user_data) {
     while(list) {
-        if (find_data(list->data, client_data)) {
+        if (find_data(list->data, user_data)) {
             return list->data;
         }
         list = list->next;

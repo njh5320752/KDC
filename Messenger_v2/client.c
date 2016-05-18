@@ -77,12 +77,26 @@ static void handle_disconnect(Client *client, int fd) {
 
 }
 
+static char* create_req_all_mesg_packet() {
+    printf("create_req_all_mesg_packet\n");
+    return NULL;
+}
+
+static char* create_req_snd_mesg_packet(char *input_str) {
+    printf("create_req_snd_mesg_packet\n");
+    return NULL;
+}
+
+static char* create_req_first_or_last_mesg_packet(char *input_str) {
+    printf("create_req_first_or_last_mesg_packet\n");
+    return NULL;
+}
+
 static void handle_stdin_event(Client* client, int fd) {
-    char *buf;
+    char *buf, *input_str;
     int n_byte;
     int input_size;
-    char *input_str;
-    int test;
+    char request_num;
 
     buf = (char*) malloc(BUF_SIZE);
     if (!buf) {
@@ -117,13 +131,30 @@ static void handle_stdin_event(Client* client, int fd) {
 
     memset(input_str, 0, input_size);
     copy_buffer_list_data(client, input_str);
-    printf("input_str:%s", input_str);
-    test = strncasecmp(input_str, REQUEST, sizeof(REQUEST));
 
-    printf("test:%d\n", test);
-
-    if (input_size >= REQUEST_MIN_LEN && (strncasecmp(input_str, REQUEST, sizeof(REQUEST))) == 0) {
+    if (input_size >= REQ_STR_MIN_LEN && (strncasecmp(input_str, REQ_STR, strlen(REQ_STR))) == 0) {
         printf("input_str:%s", input_str);
+        request_num = input_str[8];
+
+        switch(request_num) {
+            case '1':
+                if (input_size == REQ_STR_MIN_LEN) {
+                    create_req_all_mesg_packet();
+                }
+                break;
+            case '3':
+                if (input_size > REQ_STR_MIN_LEN && (input_str[REQ_STR_MIN_LEN - 1] == ' ')) {
+                    create_req_snd_mesg_packet(input_str);
+                }
+                break;
+            case '5':
+                if (input_size == REQ_FIRST_OR_LAST_MESG_PACKET_SIZE && (input_str[REQ_STR_MIN_LEN - 1] == ' ')) {
+                    create_req_first_or_last_mesg_packet(input_str);
+                }
+                break;
+            default:
+                printf("Your request number is %c Please recommand\n", request_num);
+        }
     }
 }
 
@@ -191,8 +222,6 @@ Client* new_client(Looper *looper) {
 
     add_watcher(looper, STDIN_FILENO, handle_events, client, POLLIN);
     add_watcher(looper, client_fd, handle_events, client, POLLIN);
-
-    set_state(looper, 1);
 
     return client;
 }

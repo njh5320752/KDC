@@ -16,23 +16,23 @@ Mesg_File* new_mesg_file() {
     Mesg_File *mesg_file;
     char *homedir;
     char *message_path;
-    int home_path_len;
-    int message_str_len;
-    int message_path_len;
+    int home_pathlen;
+    int message_strlen;
+    int message_pathlen;
     int file_fd;
 
     homedir = getenv("HOME");
 
-    home_path_len = strlen(homedir);
-    message_str_len = strlen(MESSAGE_STORE);
+    home_pathlen = strlen(homedir);
+    message_strlen = strlen(MESSAGE_STORE);
 
-    message_path_len = home_path_len + message_str_len;
+    message_pathlen = home_pathlen + message_strlen;
 
-    message_path = (char*) malloc(message_path_len + 1);
-    memset(message_path, 0, message_path_len + 1);
+    message_path = (char*) malloc(message_pathlen + 1);
+    memset(message_path, 0, message_pathlen + 1);
 
-    strncpy(message_path, homedir, home_path_len);
-    strncpy(message_path + home_path_len, MESSAGE_STORE, message_path_len);
+    strncpy(message_path, homedir, home_pathlen);
+    strncpy(message_path + home_pathlen, MESSAGE_STORE, message_pathlen);
 
     printf("message_path:%s\n", message_path);
 
@@ -42,7 +42,7 @@ Mesg_File* new_mesg_file() {
         printf("Failed to make message store\n");
         return NULL;
     }
-    
+
     mesg_file = (Mesg_File*) malloc(sizeof(Mesg_File));
     if (!mesg_file) {
         printf("Failed to make Mesg_File\n");

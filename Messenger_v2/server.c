@@ -30,7 +30,18 @@ struct _Client {
 };
 
 static void destroy_client(void *client) {
-    free((Client*) client);
+    Client *remove_client;
+
+    if (!client) {
+        printf("There is nothing to pointer the Client\n");
+        return;
+    }
+    remove_client = (Client*) client;
+    
+    if (close(remove_client->fd) < 0) {
+        printf("Falied to close client fd\n");
+    }
+    free(remove_client);
 }
 
 static int match_client(void *client, void *fd) {
@@ -99,13 +110,11 @@ static void read_packet(int fd) {
 }
 
 static void handle_disconnect_event(Server *server, int fd) {
-    if (fd == server->fd) {
-        set_state(server->looper, -1);
-    } else {
+    if (fd != server->fd) {
         remove_client(server, fd);
+        remove_watcher(server->looper, fd);
     }
-    printf("disconnected client:%d\n", fd);
-    remove_watcher(server->looper, fd);
+    printf("disconnected:%d\n", fd);
 }
 
 static void handle_req_event(Server *server, int fd) {
@@ -170,10 +179,14 @@ Server* new_server(Looper *looper) {
         return NULL;
     }
 
-    unlink(SOCKET_PATH);
+    if (unlink(SOCKET_PATH) < 0) {
+        printf("Failed to unlink\n");
+        return NULL;
+    }
+
     if ((server_fd = socket(AF_UNIX, SOCK_STREAM,0)) == -1) {
         perror("socket error");
-        exit(-1);
+        return NULL;
     }
 
     memset(&addr, 0, sizeof(addr));
@@ -183,13 +196,13 @@ Server* new_server(Looper *looper) {
     if (bind(server_fd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
         perror("bind error");
         close(server_fd);
-        exit(-1);
+        return NULL;
     }
 
     if (listen(server_fd, 0) == -1) {
         perror("listen error");
         close(server_fd);
-        exit(-1);
+        return NULL;
     }
 
     mesg_file = new_mesg_file();
@@ -208,8 +221,6 @@ Server* new_server(Looper *looper) {
 
     add_watcher(server->looper, server_fd, handle_events, server, POLLIN);
 
-    set_state(server->looper, 1);
-
     return server;
 }
 
@@ -224,7 +235,7 @@ void destroy_server(Server *server) {
     list = server->client_list;
     d_list_free(list, destroy_client);
 
-    destroy_looper(server->looper);
+    remove_all_watchers(server->looper);
     destroy_mesg_file_db(server->mesg_file_db);
 
     free(server);

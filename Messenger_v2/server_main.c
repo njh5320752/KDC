@@ -11,5 +11,8 @@ int main() {
 
     state = run(looper);
 
+    destroy_server(server);
+    destroy_looper(looper);
+
     return 0;
 }

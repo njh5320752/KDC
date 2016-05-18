@@ -4,8 +4,9 @@
 #include "looper.h"
 
 #define BUF_SIZE 3
-#define REQUEST "command "
-#define REQUEST_MIN_LEN 10
+#define REQ_STR "command "
+#define REQ_STR_MIN_LEN 10
+#define REQ_FIRST_OR_LAST_MESG_PACKET_SIZE 12
 
 typedef struct _Client Client;
 
