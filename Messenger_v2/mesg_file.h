@@ -4,6 +4,7 @@
 typedef struct _Mesg_File Mesg_File;
 
 Mesg_File* new_mesg_file();
+void destroy_mesg_file(Mesg_File *mesg_file);
 
 #endif
 

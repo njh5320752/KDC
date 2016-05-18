@@ -225,3 +225,18 @@ Client* new_client(Looper *looper) {
 
     return client;
 }
+
+void destroy_client(Client *client) {
+    if (!client) {
+        printf("There is nothing to point the Client\n");
+        return;
+    }
+
+    if (close(client->fd) < 0) {
+        printf("Failed to close\n");
+        return;
+    }
+    remove_all_watchers(client->looper);
+
+    free(client);
+}

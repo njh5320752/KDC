@@ -53,3 +53,12 @@ Mesg_File* new_mesg_file() {
 
     return mesg_file;
 }
+
+void destroy_mesg_file(Mesg_File* mesg_file) {
+    if (!mesg_file) {
+        printf("There is nothing to pointer the Mesg_File\n");
+        return;
+    }
+
+    free(mesg_file);
+}

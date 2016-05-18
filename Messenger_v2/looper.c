@@ -121,6 +121,7 @@ int run(Looper *looper) {
     int n_watcher;
     struct pollfd *fds;
     DList *list;
+
     Watcher *watcher;
 
     nfds = 0;

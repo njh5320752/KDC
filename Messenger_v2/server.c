@@ -232,11 +232,19 @@ void destroy_server(Server *server) {
         return;
     }
 
+    stop(server->looper);
+
+    if (close(server->fd) < 0) {
+        printf("Failed to close server\n");
+        return;
+    }
+
     list = server->client_list;
     d_list_free(list, destroy_client);
 
     remove_all_watchers(server->looper);
     destroy_mesg_file_db(server->mesg_file_db);
+    destroy_mesg_file(server->mesg_file);
 
     free(server);
 }

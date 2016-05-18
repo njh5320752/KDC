@@ -11,5 +11,8 @@ int main() {
 
     state = run(looper);
 
+    destroy_client(client);
+    destroy_looper(looper);
+
     return 0;
 }
