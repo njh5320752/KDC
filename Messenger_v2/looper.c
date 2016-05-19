@@ -160,6 +160,8 @@ int run(Looper *looper) {
                     watcher->handle_events(fd, watcher->user_data, revents);
                 }
             }
+        } else if (nfds < 0) {
+            printf("Error in poll. error number is %d\n", errno);
         }
         free(fds);
     }
